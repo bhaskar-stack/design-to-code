@@ -1,0 +1,299 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@keyframes pulse-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+@theme inline {
+    --font-heading: var(--font-heading);
+    --font-sans: var(--font-sans);
+    --color-brand-25: var(--brand-25);
+    --color-brand-50: var(--brand-50);
+    --color-brand-100: var(--brand-100);
+    --color-brand-200: var(--brand-200);
+    --color-brand-300: var(--brand-300);
+    --color-brand-400: var(--brand-400);
+    --color-brand-500: var(--brand-500);
+    --color-brand-600: var(--brand-600);
+    --color-brand-700: var(--brand-700);
+    --color-brand-800: var(--brand-800);
+    --color-brand-900: var(--brand-900);
+    --color-brand-950: var(--brand-950);
+    --color-gray-dark-25: var(--gray-dark-25);
+    --color-gray-dark-50: var(--gray-dark-50);
+    --color-gray-dark-100: var(--gray-dark-100);
+    --color-gray-dark-200: var(--gray-dark-200);
+    --color-gray-dark-300: var(--gray-dark-300);
+    --color-gray-dark-400: var(--gray-dark-400);
+    --color-gray-dark-500: var(--gray-dark-500);
+    --color-gray-dark-600: var(--gray-dark-600);
+    --color-gray-dark-700: var(--gray-dark-700);
+    --color-gray-dark-800: var(--gray-dark-800);
+    --color-gray-dark-900: var(--gray-dark-900);
+    --color-gray-dark-950: var(--gray-dark-950);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    --brand-25: #fffef9;
+    --brand-50: #f6f5f0;
+    --brand-100: #e9e6d8;
+    --brand-200: #d4cfb4;
+    --brand-300: #bbb189;
+    --brand-400: #a79868;
+    --brand-500: #98875a;
+    --brand-600: #826f4c;
+    --brand-700: #69573f;
+    --brand-800: #5a4939;
+    --brand-900: #4f4034;
+    --brand-950: #2c231c;
+    --gray-dark-25: #fafafa;
+    --gray-dark-50: #f0f0f0;
+    --gray-dark-100: #e5e5e5;
+    --gray-dark-200: #cccccc;
+    --gray-dark-300: #b2b2b2;
+    --gray-dark-400: #999999;
+    --gray-dark-500: #7f7f7f;
+    --gray-dark-600: #666666;
+    --gray-dark-700: #2f2f32;
+    --gray-dark-800: #18181b;
+    --gray-dark-900: #0f0f0f;
+    --gray-dark-950: #09090b;
+
+    /* Tab underline (active) — brand-400 fade in/out */
+    --gradient-tab-underline-active: linear-gradient(
+        90deg,
+        rgba(167, 152, 104, 0) 0%,
+        rgba(167, 152, 104, 1) 25%,
+        rgba(167, 152, 104, 1) 75%,
+        rgba(167, 152, 104, 0) 100%
+    );
+
+    /* Brand Logo gradient (multi-stop, 45deg) */
+    --gradient-brand-logo: linear-gradient(45deg,
+        rgb(121, 101, 50) 0%,
+        rgb(142, 123, 76) 8%,
+        rgb(153, 136, 92) 22%,
+        rgb(160, 144, 102) 36%,
+        rgb(163, 147, 105) 50%,
+        rgb(160, 144, 101) 65%,
+        rgb(152, 135, 90) 80%,
+        rgb(139, 120, 72) 92%,
+        rgb(122, 102, 51) 100%);
+
+    /* Brand Primary 45deg */
+    --gradient-brand-primary-600-500-45: linear-gradient(45deg, #826f4c, #98875a);
+    --gradient-brand-primary-700-500-45: linear-gradient(45deg, #69573f, #98875a);
+    --gradient-brand-primary-700-600-45: linear-gradient(45deg, #69573f, #826f4c);
+    --gradient-brand-primary-800-500-45: linear-gradient(45deg, #5a4939, #98875a);
+    --gradient-brand-primary-800-600-45: linear-gradient(45deg, #5a4939, #826f4c);
+    --gradient-brand-primary-900-600-45: linear-gradient(45deg, #4f4034, #826f4c);
+    --gradient-brand-primary-900-700-45: linear-gradient(45deg, #4f4034, #69573f);
+
+    /* Brand Primary 90deg */
+    --gradient-brand-primary-600-500-90: linear-gradient(90deg, #826f4c, #98875a);
+    --gradient-brand-primary-700-500-90: linear-gradient(90deg, #69573f, #98875a);
+    --gradient-brand-primary-700-600-90: linear-gradient(90deg, #69573f, #826f4c);
+    --gradient-brand-primary-800-500-90: linear-gradient(90deg, #5a4939, #98875a);
+    --gradient-brand-primary-800-600-90: linear-gradient(90deg, #5a4939, #826f4c);
+    --gradient-brand-primary-900-600-90: linear-gradient(90deg, #4f4034, #826f4c);
+    --gradient-brand-primary-900-700-90: linear-gradient(90deg, #4f4034, #69573f);
+
+    /* Yellow / Golden Glossy (multi-layer approximations) */
+    --gradient-golden-glossy-001:
+        linear-gradient(0deg, #C1A875 0%, #C1A875 100%),
+        radial-gradient(299.46% 116.44% at -2.24% 25.27%, #F5D08A 0%, #FFE7BB 52.43%, #F5D08A 100%),
+        linear-gradient(74deg, #576265 13.43%, #9EA1A1 26.76%, #848B8A 31.65%, #576265 53.73%, #576265 77.78%, #757A7B 86.51%, #576265 95.7%);
+    --gradient-golden-glossy-002: linear-gradient(58deg,
+        #826f4c 13%, #f5d08a 27%, #c1a875 32%, #826f4c 54%,
+        #826f4c 78%, #a79868 87%, #826f4c 96%);
+    --gradient-golden-glossy-003: linear-gradient(258deg,
+        #826f4c 11%, #f5d08a 24%, #d4cfb4 29%, #98875a 51%,
+        #a79868 84%, #98875a 93%);
+
+    /* Gray Light Neutral Linear (180deg) */
+    --gradient-gray-neutral-01: linear-gradient(180deg, #ffffff, #f3f5f7);
+    --gradient-gray-neutral-02: linear-gradient(180deg, #f9fafb, #edf0f3);
+    --gradient-gray-neutral-03: linear-gradient(180deg, #edf0f3, #e7ebef);
+    --gradient-gray-neutral-04: linear-gradient(180deg, #f3f5f7, #e0e5eb);
+    --gradient-gray-neutral-05: linear-gradient(180deg, #edf0f3, #d4dbe2);
+    --gradient-gray-neutral-06: linear-gradient(180deg, #e7ebef, #c8d1da);
+    --gradient-gray-neutral-07: linear-gradient(180deg, #e7ebef, #c8d1da);
+
+    /* Gray Light True Linear (180deg) */
+    --gradient-gray-true-01: linear-gradient(180deg, #ffffff, #f5f5f5);
+    --gradient-gray-true-02: linear-gradient(180deg, #fafafa, #f0f0f0);
+    --gradient-gray-true-03: linear-gradient(180deg, #fafafa, #ebebeb);
+    --gradient-gray-true-04: linear-gradient(180deg, #f5f5f5, #e5e5e5);
+    --gradient-gray-true-05: linear-gradient(180deg, #f0f0f0, #dbdbdb);
+    --gradient-gray-true-06: linear-gradient(180deg, #ebebeb, #d1d1d1);
+    --gradient-gray-true-07: linear-gradient(180deg, #ebebeb, #d1d1d1);
+
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.5rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+}
+
+.dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+    }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    }
+}
+
+@layer utilities {
+  .bg-gradient-brand-logo { background-image: var(--gradient-brand-logo); }
+
+  .bg-gradient-brand-primary-600-500-45 { background-image: var(--gradient-brand-primary-600-500-45); }
+  .bg-gradient-brand-primary-700-500-45 { background-image: var(--gradient-brand-primary-700-500-45); }
+  .bg-gradient-brand-primary-700-600-45 { background-image: var(--gradient-brand-primary-700-600-45); }
+  .bg-gradient-brand-primary-800-500-45 { background-image: var(--gradient-brand-primary-800-500-45); }
+  .bg-gradient-brand-primary-800-600-45 { background-image: var(--gradient-brand-primary-800-600-45); }
+  .bg-gradient-brand-primary-900-600-45 { background-image: var(--gradient-brand-primary-900-600-45); }
+  .bg-gradient-brand-primary-900-700-45 { background-image: var(--gradient-brand-primary-900-700-45); }
+
+  .bg-gradient-brand-primary-600-500-90 { background-image: var(--gradient-brand-primary-600-500-90); }
+  .bg-gradient-brand-primary-700-500-90 { background-image: var(--gradient-brand-primary-700-500-90); }
+  .bg-gradient-brand-primary-700-600-90 { background-image: var(--gradient-brand-primary-700-600-90); }
+  .bg-gradient-brand-primary-800-500-90 { background-image: var(--gradient-brand-primary-800-500-90); }
+  .bg-gradient-brand-primary-800-600-90 { background-image: var(--gradient-brand-primary-800-600-90); }
+  .bg-gradient-brand-primary-900-600-90 { background-image: var(--gradient-brand-primary-900-600-90); }
+  .bg-gradient-brand-primary-900-700-90 { background-image: var(--gradient-brand-primary-900-700-90); }
+
+  .bg-gradient-golden-glossy-001 {
+    background-image: var(--gradient-golden-glossy-001);
+    background-blend-mode: color, overlay, normal;
+  }
+  .bg-gradient-golden-glossy-002 { background-image: var(--gradient-golden-glossy-002); }
+  .bg-gradient-golden-glossy-003 { background-image: var(--gradient-golden-glossy-003); }
+
+  .bg-gradient-gray-neutral-01 { background-image: var(--gradient-gray-neutral-01); }
+  .bg-gradient-gray-neutral-02 { background-image: var(--gradient-gray-neutral-02); }
+  .bg-gradient-gray-neutral-03 { background-image: var(--gradient-gray-neutral-03); }
+  .bg-gradient-gray-neutral-04 { background-image: var(--gradient-gray-neutral-04); }
+  .bg-gradient-gray-neutral-05 { background-image: var(--gradient-gray-neutral-05); }
+  .bg-gradient-gray-neutral-06 { background-image: var(--gradient-gray-neutral-06); }
+  .bg-gradient-gray-neutral-07 { background-image: var(--gradient-gray-neutral-07); }
+
+  .bg-gradient-gray-true-01 { background-image: var(--gradient-gray-true-01); }
+  .bg-gradient-gray-true-02 { background-image: var(--gradient-gray-true-02); }
+  .bg-gradient-gray-true-03 { background-image: var(--gradient-gray-true-03); }
+  .bg-gradient-gray-true-04 { background-image: var(--gradient-gray-true-04); }
+  .bg-gradient-gray-true-05 { background-image: var(--gradient-gray-true-05); }
+  .bg-gradient-gray-true-06 { background-image: var(--gradient-gray-true-06); }
+  .bg-gradient-gray-true-07 { background-image: var(--gradient-gray-true-07); }
+}
