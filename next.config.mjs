@@ -13,6 +13,10 @@ const nextConfig = {
   },
   basePath: basePath || undefined,
   assetPrefix: basePath ? `${basePath}/` : undefined,
+  // Plain <img> tags and CSS url()s don't get basePath applied automatically
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
+  },
 }
 
 export default nextConfig

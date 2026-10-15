@@ -677,7 +677,7 @@ const TopNav = () => {
       `}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img src="/logos/thrive-logo.svg" alt="Thrive Club" width={102} height={36} />
+          <img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/logos/thrive-logo.svg`} alt="Thrive Club" width={102} height={36} />
         </div>
         <div style={{ width: 1, height: 16, background: INK_700 }} />
         <div style={{
