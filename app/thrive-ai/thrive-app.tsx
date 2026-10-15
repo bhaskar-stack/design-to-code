@@ -56,7 +56,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Home01Icon,
-  AiBrowserIcon,
+  FileChartPieIcon,
   AiFileIcon,
   ArtificialIntelligence08Icon,
 } from "@hugeicons/core-free-icons"
@@ -144,6 +144,10 @@ function getFileIconType(filename: string): FileIconType {
   const map: Record<string, FileIconType> = { pdf: "pdf", png: "png", jpg: "jpg", jpeg: "jpg", doc: "doc", docx: "docx", xls: "xls", xlsx: "xlsx", zip: "zip", mp4: "mp4" }
   return map[ext] ?? "pdf"
 }
+
+// Triggers inside SlidingTabsList: the sliding indicator is the only selected state,
+// so drop TabsTrigger's own active background and stroke
+const slidingTrigger = "z-[1] data-active:bg-transparent data-active:shadow-none group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent"
 
 function SlidingTabsList({ value, children, className }: { value: string; children: React.ReactNode; className?: string }) {
   const listRef = useRef<HTMLDivElement>(null)
@@ -445,7 +449,7 @@ function TopNav({ tab, setTab, onGoHome, activeChatId, onClickHomeTab, hasNotifi
               Home
             </MainNavBarTabsTrigger>
             <MainNavBarTabsTrigger value="planning">
-              <HugeiconsIcon icon={AiBrowserIcon} strokeWidth={2} />
+              <HugeiconsIcon icon={FileChartPieIcon} strokeWidth={2} />
               Tax Planning
             </MainNavBarTabsTrigger>
             <MainNavBarTabsTrigger value="filing">
@@ -2178,19 +2182,19 @@ function TaxPlanView({ states, setStates }: {
           <Tabs value={view} onValueChange={setView} className="mb-4">
             <div className="flex items-center justify-between">
               <SlidingTabsList value={view}>
-                <TabsTrigger value="personalized" className="gap-1.5 z-[1] data-active:bg-transparent data-active:shadow-none">
+                <TabsTrigger value="personalized" className={cn("gap-1.5", slidingTrigger)}>
                   Personalized
                   <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-[10px] leading-3 font-normal text-[#fffef9] min-w-4 text-center">
                     {STRATEGIES.filter(s => s.personalized && states[s.id] !== "SKIPPED").length}
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="archived" className="gap-1.5 z-[1] data-active:bg-transparent data-active:shadow-none">
+                <TabsTrigger value="archived" className={cn("gap-1.5", slidingTrigger)}>
                   Archived
                   <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-[10px] leading-3 font-normal text-[#fffef9] min-w-4 text-center">
                     {STRATEGIES.filter(s => s.personalized && states[s.id] === "SKIPPED").length}
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="others" className="gap-1.5 z-[1] data-active:bg-transparent data-active:shadow-none">
+                <TabsTrigger value="others" className={cn("gap-1.5", slidingTrigger)}>
                   Others
                   <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-[10px] leading-3 font-normal text-[#fffef9] min-w-4 text-center">
                     {STRATEGIES.filter(s => !s.personalized).length}
@@ -2860,9 +2864,9 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
         {isComplete && (
           <Tabs value={canvasTab} onValueChange={setCanvasTab}>
             <SlidingTabsList value={canvasTab} className="gap-0.5">
-              <TabsTrigger value="profile" className="z-[1] data-active:bg-transparent data-active:shadow-none">Profile</TabsTrigger>
-              <TabsTrigger value="summary" className="z-[1] data-active:bg-transparent data-active:shadow-none">Summary</TabsTrigger>
-              <TabsTrigger value="draft" className="z-[1] data-active:bg-transparent data-active:shadow-none">Draft PDF</TabsTrigger>
+              <TabsTrigger value="profile" className={slidingTrigger}>Profile</TabsTrigger>
+              <TabsTrigger value="summary" className={slidingTrigger}>Summary</TabsTrigger>
+              <TabsTrigger value="draft" className={slidingTrigger}>Draft PDF</TabsTrigger>
             </SlidingTabsList>
           </Tabs>
         )}
@@ -3629,8 +3633,8 @@ function PdfPreviewPanel({ year }: { year: string }) {
         <div className="flex items-center gap-3 px-4 pt-4 pb-3 shrink-0">
           <div className="text-[18px] leading-7 font-medium text-foreground shrink-0">Preview</div>
           <SlidingTabsList value={previewTab} className="gap-0.5">
-            <TabsTrigger value="1040" className="z-[1] data-active:bg-transparent data-active:shadow-none">1040 PDF</TabsTrigger>
-            <TabsTrigger value="docs" className="z-[1] data-active:bg-transparent data-active:shadow-none">Other documents</TabsTrigger>
+            <TabsTrigger value="1040" className={slidingTrigger}>1040 PDF</TabsTrigger>
+            <TabsTrigger value="docs" className={slidingTrigger}>Other documents</TabsTrigger>
           </SlidingTabsList>
           <div className="flex-1" />
           <Button variant="outline" size="sm" className="shrink-0 gap-1 text-[14px] leading-4 h-7 pl-2 pr-1.5">
@@ -3814,7 +3818,7 @@ function DocumentsHub({ activeYear, setActiveYear }: { activeYear: string; setAc
             <Tabs value={activeType} onValueChange={setActiveType}>
               <SlidingTabsList value={activeType} className="mb-4">
                 {DOC_TYPES.map((t) => (
-                  <TabsTrigger key={t} value={t} className="gap-1.5 z-[1] data-active:bg-transparent data-active:shadow-none">
+                  <TabsTrigger key={t} value={t} className={cn("gap-1.5", slidingTrigger)}>
                     {t}
                     <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-[10px] leading-3 font-normal text-[#fffef9] min-w-4 text-center">
                       {typeCounts[t]}
