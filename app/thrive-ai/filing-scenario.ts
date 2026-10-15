@@ -350,7 +350,7 @@ const merge = (...effects: FilingEffect[]): FilingEffect => ({
 const reask = (nodeId: string, without = "more"): Dyn<FilingOption[]> =>
   (f) => resolve(FILING_NODES[nodeId].options ?? [], f).filter(o => o.id !== without)
 
-export const STATUS_LABEL: Record<FilingStatus, string> = { MFJ: "Married Filing Jointly", Single: "Single", HOH: "Head of Household", MFS: "Married Filing Separately" }
+export const STATUS_LABEL: Record<FilingStatus, string> = { MFJ: "Married filing jointly", Single: "Single", HOH: "Head of household", MFS: "Married filing separately" }
 const usd = money
 
 export const FILING_START = "intro"
@@ -366,7 +366,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     focus: { section: "profile", item: "filing_status" },
     text: "I have you filing jointly with your spouse, same as last year. Still married filing jointly for 2026?",
     options: [
-      { id: "mfj", label: "Yes, married filing jointly", set: { status: "MFJ" }, effect: confirm("profile", "filing_status", "Married Filing Jointly"), next: "residency" },
+      { id: "mfj", label: "Yes, married filing jointly", set: { status: "MFJ" }, effect: confirm("profile", "filing_status", "Married filing jointly"), next: "residency" },
       { id: "changed", label: "Something changed", next: "status_changed" },
       { id: "compare", label: "Is joint still the best option?", next: "status_compare" },
     ],
@@ -379,8 +379,8 @@ export const FILING_NODES: Record<string, FilingNode> = {
       return `I ran both with last year's numbers. Filing jointly comes out ${usd(joint.totalBack - separate.totalBack)} better than filing separately — separate returns halve the SALT cap and phase out credits sooner.\n\nJoint is the better choice unless you need to keep liabilities apart.`
     },
     options: [
-      { id: "mfj", label: "Stay with joint", set: { status: "MFJ" }, effect: confirm("profile", "filing_status", "Married Filing Jointly"), next: "residency" },
-      { id: "mfs", label: "File separately anyway", set: { status: "MFS" }, effect: confirm("profile", "filing_status", "Married Filing Separately"), next: "residency" },
+      { id: "mfj", label: "Stay with joint", set: { status: "MFJ" }, effect: confirm("profile", "filing_status", "Married filing jointly"), next: "residency" },
+      { id: "mfs", label: "File separately anyway", set: { status: "MFS" }, effect: confirm("profile", "filing_status", "Married filing separately"), next: "residency" },
     ],
   },
   status_changed: {
@@ -388,9 +388,9 @@ export const FILING_NODES: Record<string, FilingNode> = {
     text: "No problem — what's your filing status for 2026?",
     options: [
       { id: "single", label: "Single", set: { status: "Single" }, effect: confirm("profile", "filing_status", "Single"), next: "residency" },
-      { id: "hoh", label: "Head of household", set: { status: "HOH" }, effect: confirm("profile", "filing_status", "Head of Household"), next: "residency" },
+      { id: "hoh", label: "Head of household", set: { status: "HOH" }, effect: confirm("profile", "filing_status", "Head of household"), next: "residency" },
       { id: "mfs", label: "Married filing separately", set: { status: "MFS" }, next: "status_mfs" },
-      { id: "mfj", label: "Actually, still joint", set: { status: "MFJ" }, effect: confirm("profile", "filing_status", "Married Filing Jointly"), next: "residency" },
+      { id: "mfj", label: "Actually, still joint", set: { status: "MFJ" }, effect: confirm("profile", "filing_status", "Married filing jointly"), next: "residency" },
     ],
   },
   status_mfs: {
@@ -400,8 +400,8 @@ export const FILING_NODES: Record<string, FilingNode> = {
       return `Heads up — filing separately costs you about ${usd(joint.totalBack - r.totalBack)} more than filing jointly. The SALT cap drops to $5,000, brackets are narrower, and some credits phase out sooner.\n\nContinue with married filing separately?`
     },
     options: [
-      { id: "mfs", label: "Continue with separate", set: { status: "MFS" }, effect: confirm("profile", "filing_status", "Married Filing Separately"), next: "residency" },
-      { id: "mfj", label: "Switch back to joint", set: { status: "MFJ" }, effect: confirm("profile", "filing_status", "Married Filing Jointly"), next: "residency" },
+      { id: "mfs", label: "Continue with separate", set: { status: "MFS" }, effect: confirm("profile", "filing_status", "Married filing separately"), next: "residency" },
+      { id: "mfj", label: "Switch back to joint", set: { status: "MFJ" }, effect: confirm("profile", "filing_status", "Married filing jointly"), next: "residency" },
     ],
   },
   residency: {
@@ -447,10 +447,10 @@ export const FILING_NODES: Record<string, FilingNode> = {
     focus: { section: "profile", item: "filing_status" },
     text: (f, r) => {
       const hoh = computeReturn({ ...f, status: "HOH" })
-      return `Since you're single with a dependent living with you, you likely qualify for Head of Household — a bigger standard deduction ($21,900 vs $14,600) and wider brackets. That's about ${usd(hoh.totalBack - r.totalBack)} better.\n\nSwitch to Head of Household?`
+      return `Since you're single with a dependent living with you, you likely qualify for head of household — a bigger standard deduction ($21,900 vs $14,600) and wider brackets. That's about ${usd(hoh.totalBack - r.totalBack)} better.\n\nSwitch to head of household?`
     },
     options: [
-      { id: "hoh", label: "Switch to head of household", set: { status: "HOH" }, effect: confirm("profile", "filing_status", "Head of Household"), next: "employment" },
+      { id: "hoh", label: "Switch to head of household", set: { status: "HOH" }, effect: confirm("profile", "filing_status", "Head of household"), next: "employment" },
       { id: "single", label: "Keep single", next: "employment" },
     ],
   },

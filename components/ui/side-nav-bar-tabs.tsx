@@ -57,8 +57,8 @@ function SideNavBarTabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="side-nav-bar-tabs-trigger"
       className={cn(
-        // base layout — outer 256-wide row with 12px horizontal margin (= 280px column)
-        "relative mx-3 my-1.5 flex h-9 items-center gap-2 rounded-lg border border-transparent px-2 py-1.5 text-sm whitespace-nowrap outline-none transition-colors",
+        // base layout — 32px rows, 2px apart, with 12px horizontal margin (= 280px column)
+        "relative mx-3 my-px flex h-8 items-center gap-2 rounded-lg border border-transparent px-2 text-sm whitespace-nowrap outline-none transition-colors",
         "focus-visible:ring-2 focus-visible:ring-ring/50",
         "[&_svg]:size-5 [&_svg]:shrink-0",
         // default state — muted text/icon

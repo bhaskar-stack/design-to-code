@@ -101,7 +101,7 @@ import {
 // ── tiny primitives ─────────────────────────────────────────────────────────
 function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("text-[11px] uppercase tracking-[1.4px] text-muted-foreground font-medium", className)}>
+    <div className={cn("text-xs text-muted-foreground font-medium", className)}>
       {children}
     </div>
   )
@@ -109,15 +109,15 @@ function Eyebrow({ children, className }: { children: React.ReactNode; className
 
 function Pill({ children, tone = "neutral" }: { children: React.ReactNode; tone?: string }) {
   const toneClasses: Record<string, string> = {
-    neutral: "bg-card text-foreground/80 border-border",
+    neutral: "bg-card text-gray-dark-200 border-border",
     gold: "bg-brand-500/15 text-brand-400 border-transparent",
-    good: "bg-emerald-50 text-emerald-700 border-transparent",
-    warn: "bg-amber-50 text-amber-700 border-transparent",
+    good: "bg-emerald-500/15 text-emerald-400 border-transparent",
+    warn: "bg-amber-500/15 text-amber-400 border-transparent",
     lock: "bg-muted text-muted-foreground border-border",
   }
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.8px] px-2 py-1 rounded font-medium",
+      "inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded font-medium",
       toneClasses[tone] || toneClasses.neutral
     )}>
       {children}
@@ -154,6 +154,10 @@ function getFileIconType(filename: string): FileIconType {
 // so drop TabsTrigger's own active background and stroke
 const slidingTrigger = "z-[1] data-active:bg-transparent data-active:shadow-none group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent"
 
+// Left nav on Planning, Filing and Documents. 14px top padding centers the first
+// 32px row on the 28px panel title beside it (panel content starts 17px down).
+const sideNavList = "w-[220px] shrink-0 pt-[14px] [&_svg]:hidden"
+
 function SlidingTabsList({ value, children, className }: { value: string; children: React.ReactNode; className?: string }) {
   const listRef = useRef<HTMLDivElement>(null)
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
@@ -161,9 +165,15 @@ function SlidingTabsList({ value, children, className }: { value: string; childr
   useEffect(() => {
     const list = listRef.current
     if (!list) return
-    const active = list.querySelector('[data-state="active"]') as HTMLElement | null
-    if (!active) return
-    setIndicator({ left: active.offsetLeft, width: active.offsetWidth })
+    const measure = () => {
+      const active = list.querySelector('[data-state="active"]') as HTMLElement | null
+      if (active) setIndicator({ left: active.offsetLeft, width: active.offsetWidth })
+    }
+    measure()
+    // Re-measure when tab widths change (web fonts loading, counts changing, hidden tab shown)
+    const observer = new ResizeObserver(measure)
+    list.querySelectorAll('[role="tab"]').forEach(tab => observer.observe(tab))
+    return () => observer.disconnect()
   }, [value])
 
   return (
@@ -180,28 +190,28 @@ function SlidingTabsList({ value, children, className }: { value: string; childr
 // ── data ────────────────────────────────────────────────────────────────────
 const STRATEGIES = [
   {
-    id: "s1", title: "Maximize 401(k) Contributions", cat: "Retirement",
+    id: "s1", title: "Maximize 401(k) contributions", cat: "Retirement",
     desc: "Increase pre-tax contributions to lower taxable income.",
     savings: 3200, tier: "self-serve", complexity: "Low",
     personalized: true,
     tags: ["Annual recurring", "Easy to implement"],
   },
   {
-    id: "s2", title: "HSA Contributions", cat: "Health",
+    id: "s2", title: "HSA contributions", cat: "Health",
     desc: "Triple tax-advantaged account for medical expenses.",
     savings: 1100, tier: "self-serve", complexity: "Low",
     personalized: true,
     tags: ["Annual recurring", "Easy to implement"],
   },
   {
-    id: "s3", title: "Charitable Bunching (DAF)", cat: "Giving",
+    id: "s3", title: "Charitable bunching (DAF)", cat: "Giving",
     desc: "Bunch donations into a Donor-Advised Fund to clear the standard deduction.",
     savings: 600, tier: "self-serve", complexity: "Low",
     personalized: true,
     tags: ["One-time setup", "Long-term benefits"],
   },
   {
-    id: "s4", title: "RSU Sell Timing & 83(b)", cat: "Equity",
+    id: "s4", title: "RSU sell timing & 83(b)", cat: "Equity",
     desc: "Time vesting and sales across calendar years to manage AMT and brackets.",
     savings: null, tier: "complex", complexity: "High",
     complexReason: "Sensitive to your Tech Corp vest schedule and CA marginal rate. I'll model scenarios, but you'll review and decide.",
@@ -217,7 +227,7 @@ const STRATEGIES = [
     tags: ["Cross-border", "Requires documents"],
   },
   {
-    id: "s6", title: "California PTE Election", cat: "State",
+    id: "s6", title: "California PTE election", cat: "State",
     desc: "Pass-through entity election to deduct state tax above the SALT cap.",
     savings: 4200, tier: "self-serve", complexity: "Medium",
     personalized: true,
@@ -232,7 +242,7 @@ const STRATEGIES = [
     tags: ["Annual recurring", "High savings potential"],
   },
   {
-    id: "lib2", title: "Real Estate Professional Status", cat: "Real Estate",
+    id: "lib2", title: "Real estate professional status", cat: "Real estate",
     desc: "Treat rental losses as non-passive to offset ordinary income (750-hour rule).",
     savings: null, tier: "complex", complexity: "High",
     personalized: false,
@@ -240,7 +250,7 @@ const STRATEGIES = [
     tags: ["Long-term benefits", "Requires documents"],
   },
   {
-    id: "lib3", title: "Qualified Small Business Stock (QSBS §1202)", cat: "Equity",
+    id: "lib3", title: "Qualified small business stock (QSBS §1202)", cat: "Equity",
     desc: "Exclude up to $10M in gains on qualifying startup stock held 5+ years.",
     savings: null, tier: "complex", complexity: "High",
     personalized: false,
@@ -248,7 +258,7 @@ const STRATEGIES = [
     tags: ["Long-term benefits", "High savings potential"],
   },
   {
-    id: "lib4", title: "Defined Benefit Pension Plan", cat: "Retirement",
+    id: "lib4", title: "Defined benefit pension plan", cat: "Retirement",
     desc: "Cash-balance plan for high-income business owners — six-figure deductions.",
     savings: null, tier: "self-serve", complexity: "High",
     personalized: false,
@@ -256,7 +266,7 @@ const STRATEGIES = [
     tags: ["Annual recurring", "High savings potential"],
   },
   {
-    id: "lib5", title: "Opportunity Zone Investing", cat: "Investments",
+    id: "lib5", title: "Opportunity zone investing", cat: "Investments",
     desc: "Defer capital gains by reinvesting in qualified opportunity funds.",
     savings: null, tier: "complex", complexity: "Medium",
     personalized: false,
@@ -264,7 +274,7 @@ const STRATEGIES = [
     tags: ["Long-term benefits", "Time-sensitive"],
   },
   {
-    id: "lib6", title: "S-Corp Election", cat: "Business",
+    id: "lib6", title: "S corp election", cat: "Business",
     desc: "Pay yourself a reasonable salary, take rest as distributions to save SE tax.",
     savings: null, tier: "self-serve", complexity: "Medium",
     personalized: false,
@@ -272,7 +282,7 @@ const STRATEGIES = [
     tags: ["One-time setup", "Annual recurring"],
   },
   {
-    id: "lib7", title: "Backdoor Mega Roth", cat: "Retirement",
+    id: "lib7", title: "Mega backdoor Roth", cat: "Retirement",
     desc: "After-tax 401(k) contributions converted to Roth for tax-free growth.",
     savings: null, tier: "self-serve", complexity: "Medium",
     personalized: false,
@@ -384,7 +394,7 @@ function HeaderProfileMenu({ setTab }: { setTab: (t: string) => void }) {
     hasHighlightRef.current = false
   }
 
-  const itemClass = "relative z-10 flex items-center gap-1.5 text-sm text-gray-dark-50 p-0 bg-transparent! hover:bg-transparent! focus:bg-transparent! data-highlighted:bg-transparent! cursor-default"
+  const itemClass = "relative z-10 flex items-center gap-1.5 text-sm text-foreground p-0 bg-transparent! hover:bg-transparent! focus:bg-transparent! data-highlighted:bg-transparent! cursor-default"
 
   return (
     <DropdownMenu onOpenChange={(open) => { if (!open) clearHighlight() }}>
@@ -419,7 +429,7 @@ function HeaderProfileMenu({ setTab }: { setTab: (t: string) => void }) {
         <Separator className="bg-gray-dark-700 relative z-10" />
         <DropdownMenuItem className={itemClass} onMouseEnter={onItemHover} onFocus={onItemHover as unknown as React.FocusEventHandler<HTMLDivElement>}>
           <LogOut className="size-4 shrink-0" />
-          Signout
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -455,11 +465,11 @@ function TopNav({ tab, setTab, onGoHome, activeChatId, onClickHomeTab, hasNotifi
             </MainNavBarTabsTrigger>
             <MainNavBarTabsTrigger value="planning">
               <HugeiconsIcon icon={FileChartPieIcon} strokeWidth={2} />
-              Tax Planning
+              Tax planning
             </MainNavBarTabsTrigger>
             <MainNavBarTabsTrigger value="filing">
               <HugeiconsIcon icon={AiFileIcon} strokeWidth={2} />
-              Tax Filing
+              Tax filing
             </MainNavBarTabsTrigger>
             <MainNavBarTabsTrigger value="documents">
               <FileText className="size-4" />
@@ -571,7 +581,7 @@ function SidebarUserCard({ setTab, className }: { setTab: (t: string) => void; c
     hasHighlightRef.current = false
   }
 
-  const itemClass = "relative z-10 flex items-center gap-1.5 text-sm text-gray-dark-50 p-0 bg-transparent! hover:bg-transparent! focus:bg-transparent! data-highlighted:bg-transparent! cursor-default"
+  const itemClass = "relative z-10 flex items-center gap-1.5 text-sm text-foreground p-0 bg-transparent! hover:bg-transparent! focus:bg-transparent! data-highlighted:bg-transparent! cursor-default"
 
   return (
     <div className={cn("mt-auto", className)}>
@@ -606,7 +616,7 @@ function SidebarUserCard({ setTab, className }: { setTab: (t: string) => void; c
           <Separator className="bg-gray-dark-700 relative z-10" />
           <DropdownMenuItem className={itemClass} onMouseEnter={onItemHover} onFocus={onItemHover as unknown as React.FocusEventHandler<HTMLDivElement>}>
             <LogOut className="size-4 shrink-0" />
-            Signout
+            Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -623,8 +633,8 @@ function UploadCard({ onUpload }: { onUpload: () => void }) {
       onClick={onUpload}
       className="mt-3 flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-dark-700 bg-gray-dark-900 px-3 outline-none transition-colors hover:border-gray-dark-500 animate-[upload-slide-in_0.4s_cubic-bezier(0.2,0.8,0.2,1)_backwards]"
     >
-      <Upload className="h-4 w-4 text-gray-dark-400" />
-      <span className="text-xs font-medium text-gray-dark-400">
+      <Upload className="h-4 w-4 text-muted-foreground" />
+      <span className="text-xs font-medium text-muted-foreground">
         Click to upload Fidelity year-end statement
       </span>
     </button>
@@ -664,7 +674,7 @@ function InChatExtraction() {
             key={i}
             className={cn(
               "flex items-center gap-2 text-xs animate-[upload-slide-in_0.3s_cubic-bezier(0.2,0.8,0.2,1)_backwards]",
-              isDone ? "text-gray-dark-400" : "text-gray-dark-200"
+              isDone ? "text-muted-foreground" : "text-gray-dark-200"
             )}
           >
             {isDone ? (
@@ -706,8 +716,8 @@ function MultiSelectCard({ options, onSubmit }: { options: MultiSelectOption[]; 
   return (
     <div className="mt-3 rounded-lg border border-gray-dark-700 bg-gray-dark-950 overflow-hidden animate-[upload-slide-in_0.5s_cubic-bezier(0.2,0.8,0.2,1)_backwards]">
       <div className="flex items-center justify-between px-3.5 py-3">
-        <span className="text-[11px] uppercase tracking-[0.06em] font-semibold text-brand-300">Select all that apply</span>
-        <span className="text-[11px] text-gray-dark-400 tabular-nums">{selected.size > 0 ? `${selected.size} selected` : "none selected"}</span>
+        <span className="text-xs font-semibold text-brand-300">Select all that apply</span>
+        <span className="text-xs text-muted-foreground tabular-nums">{selected.size > 0 ? `${selected.size} selected` : "none selected"}</span>
       </div>
       <div className="flex flex-col gap-1.5 px-2.5 pb-2.5">
         {options.map((opt, i) => {
@@ -725,14 +735,14 @@ function MultiSelectCard({ options, onSubmit }: { options: MultiSelectOption[]; 
               style={{ animationDelay: `${i * 40}ms` }}
             >
               <div className={cn(
-                "size-6 rounded flex items-center justify-center text-[11px] font-bold tracking-[0.02em] shrink-0 transition-all duration-200",
-                isSel ? "bg-brand-300 text-gray-dark-950" : "bg-gray-dark-700 text-gray-dark-100"
+                "size-6 rounded flex items-center justify-center text-xs font-semibold shrink-0 transition-all duration-200",
+                isSel ? "bg-brand-300 text-gray-dark-950" : "bg-gray-dark-700 text-gray-dark-200"
               )}>
                 {letterFor(i)}
               </div>
               <span className={cn(
-                "flex-1 text-[13.5px] leading-[1.4] transition-colors duration-200",
-                isSel ? "text-white font-medium" : "text-gray-dark-100"
+                "flex-1 text-sm transition-colors duration-200",
+                isSel ? "text-white font-medium" : "text-gray-dark-200"
               )}>
                 {opt.label}
               </span>
@@ -759,9 +769,9 @@ function MultiSelectCard({ options, onSubmit }: { options: MultiSelectOption[]; 
           <>
             <button
               onClick={() => handleSubmit([])}
-              className="bg-transparent border-none px-3 py-2 text-[12px] font-semibold text-gray-dark-200 uppercase tracking-[0.06em] cursor-pointer hover:text-white transition-colors"
+              className="bg-transparent border-none px-3 py-2 text-xs font-semibold text-gray-dark-200 cursor-pointer hover:text-white transition-colors"
             >
-              {selected.size > 0 ? "Skip" : "None Apply"}
+              {selected.size > 0 ? "Skip" : "None apply"}
             </button>
             <Button
               onClick={() => handleSubmit(options.filter(o => selected.has(o.id)).map(o => o.id))}
@@ -801,7 +811,7 @@ function ExtractionTable({ onConfirm }: { onConfirm: () => void }) {
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 text-brand-300">
             <path d="M3 7l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="text-[10px] uppercase tracking-[1.2px] font-medium text-brand-300">Extracted from Fidelity_YE_2024.pdf</span>
+          <span className="text-xs font-medium text-brand-300">Extracted from Fidelity_YE_2024.pdf</span>
         </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
           {EXTRACTION_ROWS.map((row, i) => (
@@ -810,10 +820,10 @@ function ExtractionTable({ onConfirm }: { onConfirm: () => void }) {
               className="flex flex-col gap-1 animate-[extraction-row-in_0.35s_cubic-bezier(0.2,0.8,0.2,1)_backwards]"
               style={{ animationDelay: `${i * 50}ms` }}
             >
-              <span className="text-[13px] text-muted-foreground">{row.label}</span>
-              <span className={cn("h-10 w-full rounded-lg border border-gray-dark-700 bg-gray-dark-800 px-2.5 flex items-center text-sm text-white font-[Manrope]", row.mono && "font-mono")}>{row.value}</span>
+              <span className="text-sm text-muted-foreground">{row.label}</span>
+              <span className={cn("h-10 w-full rounded-lg border border-gray-dark-700 bg-gray-dark-800 px-2.5 flex items-center text-sm text-white", row.mono && "font-mono")}>{row.value}</span>
               {row.flagged && (
-                <span className="text-[11px] font-medium text-orange-600">{row.flagged}</span>
+                <span className="text-xs font-medium text-orange-400">{row.flagged}</span>
               )}
             </div>
           ))}
@@ -872,16 +882,16 @@ function ChatSurface({ context, messages, chips, onChip, header, sub, onClose, p
           {backLink ? (
             <button
               onClick={backLink.onClick}
-              className="bg-transparent border-none p-0 cursor-pointer text-[11px] text-muted-foreground uppercase tracking-[1px] font-medium flex items-center gap-1.5 hover:text-foreground transition-colors"
+              className="bg-transparent border-none p-0 cursor-pointer text-xs text-muted-foreground font-medium flex items-center gap-1.5 hover:text-foreground transition-colors"
             >
-              <span className="text-[13px] leading-none tracking-normal">←</span>
+              <span className="text-sm leading-none tracking-normal">←</span>
               {backLink.label}
             </button>
           ) : context ? (
             <Eyebrow>{context}</Eyebrow>
           ) : null}
-          <div className={cn("font-medium text-foreground", smallHeader ? "text-[16px] leading-6" : "text-[18px] leading-7", context || backLink ? "mt-1" : "")}>{header}</div>
-          {sub && <div className="text-[13px] text-muted-foreground mt-1">{sub}</div>}
+          <div className={cn("font-medium text-foreground", smallHeader ? "text-base" : "text-lg", context || backLink ? "mt-1" : "")}>{header}</div>
+          {sub && <div className="text-sm text-muted-foreground mt-1">{sub}</div>}
         </div>
         {onClose && (
           <button
@@ -994,7 +1004,7 @@ function MetricCard({ label, value, sub, accent }: {
       <CardContent>
         <Eyebrow>{label}</Eyebrow>
         <div className={cn(
-          "text-[28px] font-medium mt-2 tracking-tight",
+          "text-3xl font-semibold mt-2 tracking-tight tabular-nums",
           accent ? "text-brand-600" : "text-foreground"
         )}>
           {value}
@@ -1024,7 +1034,7 @@ function TaxPlanCard({
       }}
     >
       <div className="px-4 py-3 flex justify-between items-center">
-        <div className="text-[18px] leading-[26px] font-medium text-foreground">2026 tax plan</div>
+        <div className="text-base font-medium text-foreground">2026 tax plan</div>
         {!hideCTA && (
           <Button variant="outline" size="default" onClick={onGoToPlanning}>
             Customize your plan <ChevronRight className="size-4" />
@@ -1075,9 +1085,9 @@ function PlanningTaxPlanCard({
     >
       <div className="relative z-[1] flex items-center gap-5 p-4">
         <div className="flex-1 min-w-0 flex flex-col gap-3">
-          <div className="text-[14px] font-medium leading-[22px] text-white">Savings in your plan:</div>
+          <div className="text-sm font-medium leading-[22px] text-white">Savings in your plan:</div>
           <div
-            className="text-[32px] font-bold leading-9 tracking-tight tabular-nums bg-clip-text text-transparent"
+            className="text-3xl font-semibold tracking-tight tabular-nums bg-clip-text text-transparent"
             style={{ backgroundImage: goldenTextGradient }}
           >
             ${total.toLocaleString()}
@@ -1085,9 +1095,9 @@ function PlanningTaxPlanCard({
         </div>
         <div className="w-px h-[38px] shrink-0 bg-gray-dark-700" />
         <div className="flex-1 min-w-0 flex flex-col gap-3">
-          <div className="text-[14px] font-medium leading-[22px] text-white">Strategies for you:</div>
+          <div className="text-sm font-medium leading-[22px] text-white">Strategies for you:</div>
           <div
-            className="text-[32px] font-bold leading-9 tracking-tight tabular-nums bg-clip-text text-transparent"
+            className="text-3xl font-semibold tracking-tight tabular-nums bg-clip-text text-transparent"
             style={{ backgroundImage: goldenTextGradient }}
           >
             {count}
@@ -1104,8 +1114,8 @@ function StatColumn({ label, value, paddingLeft }: {
 }) {
   return (
     <div className={cn(paddingLeft && "pl-5")}>
-      <div className="text-[14px] leading-[22px] text-muted-foreground mb-2">{label}</div>
-      <div className="text-[28px] font-semibold text-foreground tracking-tight tabular-nums">
+      <div className="text-sm leading-[22px] text-muted-foreground mb-2">{label}</div>
+      <div className="text-3xl font-semibold text-foreground tracking-tight tabular-nums">
         {value}
       </div>
     </div>
@@ -1117,10 +1127,10 @@ function daysUntilApr15() { return 12 }
 function statusFor({ daysLeft, filingPercent, openItemCount }: {
   daysLeft: number; filingPercent: number; openItemCount: number
 }) {
-  if (openItemCount === 0) return { tone: "rest", label: "Up to date", color: "text-emerald-600" }
-  if (daysLeft <= 7 && filingPercent < 80) return { tone: "urgent", label: "Time to move", color: "text-amber-600" }
-  if (daysLeft <= 14 && filingPercent < 50) return { tone: "attention", label: "Stay on pace", color: "text-amber-600" }
-  return { tone: "ok", label: "On track", color: "text-emerald-600" }
+  if (openItemCount === 0) return { tone: "rest", label: "Up to date", color: "text-emerald-400" }
+  if (daysLeft <= 7 && filingPercent < 80) return { tone: "urgent", label: "Time to move", color: "text-amber-400" }
+  if (daysLeft <= 14 && filingPercent < 50) return { tone: "attention", label: "Stay on pace", color: "text-amber-400" }
+  return { tone: "ok", label: "On track", color: "text-emerald-400" }
 }
 
 function DeadlineChip({ days }: { days: number }) {
@@ -1128,7 +1138,7 @@ function DeadlineChip({ days }: { days: number }) {
   return (
     <Badge variant="outline" className={cn(
       "rounded-full px-3 py-1.5 text-xs font-medium gap-2",
-      isWarn && "bg-amber-50 text-amber-700 border-transparent"
+      isWarn && "bg-amber-500/15 text-amber-400 border-transparent"
     )}>
       <span className={cn(
         "size-1.5 rounded-full",
@@ -1146,12 +1156,12 @@ function StatusLine({ status, filingPercent }: {
   const isRest = status.tone === "rest"
   return (
     <div className="flex items-center gap-3 mt-3.5">
-      <span className={cn("inline-flex items-center gap-1.5 text-[13px] font-medium", status.color)}>
+      <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", status.color)}>
         <span className={cn("size-[7px] rounded-full", status.color.replace("text-", "bg-"))} />
         {status.label}
       </span>
       <span className="text-border">·</span>
-      <span className="text-[13px] text-muted-foreground">
+      <span className="text-sm text-muted-foreground">
         {isRest
           ? "We'll let you know when something needs you"
           : `${filingPercent}% of your 2026 return is done`}
@@ -1170,7 +1180,7 @@ function AllCaughtUp() {
         <span className="text-base font-medium leading-6 text-white">
           You're all caught up for now
         </span>
-        <span className="text-xs font-normal leading-4 text-gray-dark-50">
+        <span className="text-xs font-normal leading-4 text-foreground">
           No action needed at the moment. We will let you know if anything else is required.
         </span>
       </div>
@@ -1193,7 +1203,7 @@ function OpenActionItems({ items, onNavigate }: { items: ActionItem[]; onNavigat
       }}
     >
       <div className="px-4 py-3 flex items-center gap-2">
-        <span className="text-[18px] leading-[26px] font-medium text-white">Action items</span>
+        <span className="text-base font-medium text-white">Action items</span>
         {!empty && (
           <span className="bg-[#57130a] text-[#fee4e2] text-xs px-1.5 py-0.5 rounded-full">
             {items.length} {items.length === 1 ? "item" : "items"}
@@ -1207,8 +1217,8 @@ function OpenActionItems({ items, onNavigate }: { items: ActionItem[]; onNavigat
             <Check className="size-5 text-white" />
           </div>
           <div className="flex flex-col gap-1.5 min-w-0 flex-1">
-            <span className="text-[16px] leading-[24px] font-medium text-white">You're all caught up</span>
-            <span className="text-[14px] leading-[22px] text-gray-dark-50">No action needed right now. We'll notify you when something comes up.</span>
+            <span className="text-base leading-[24px] font-medium text-white">You're all caught up</span>
+            <span className="text-sm leading-[22px] text-foreground">No action needed right now. We'll notify you when something comes up.</span>
           </div>
         </div>
       ) : (
@@ -1390,7 +1400,7 @@ function HomeTab({
   const dashboardContent = (
     <>
       <div>
-        <h1 className="text-[28px] leading-10 font-medium m-0 mt-6 tracking-tight text-foreground">
+        <h1 className="text-2xl font-medium m-0 mt-6 tracking-tight text-foreground">
           Welcome back, Bhaskar.
         </h1>
       </div>
@@ -1511,7 +1521,7 @@ function HomeTab({
                   historyVisible ? "translate-x-0" : "-translate-x-[calc(100%+7px)]"
                 )}>
                   <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                    <span className="text-[13px] font-medium text-gray-dark-200">Chat history</span>
+                    <span className="text-sm font-medium text-gray-dark-200">Chat history</span>
                     <button
                       onClick={() => setHistoryOpen(false)}
                       className="size-6 rounded-md bg-gray-dark-700 cursor-pointer border-none hover:bg-gray-dark-600 transition-colors grid place-items-center"
@@ -1529,7 +1539,7 @@ function HomeTab({
                             setHistoryOpen(false)
                           }}
                           className={cn(
-                            "text-left w-full px-2 py-1.5 rounded-md text-[13px] truncate cursor-pointer border-none transition-colors",
+                            "text-left w-full px-2 py-1.5 rounded-md text-sm truncate cursor-pointer border-none transition-colors",
                             c.id === activeChatId
                               ? "bg-gray-dark-700 text-white"
                               : "bg-transparent text-gray-dark-200 hover:bg-gray-dark-800"
@@ -1543,7 +1553,7 @@ function HomeTab({
                   <div className="px-3 pb-3 pt-1">
                     <button
                       onClick={() => { startNewChat(); setHistoryOpen(false) }}
-                      className="flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md text-[13px] font-medium text-gray-dark-200 cursor-pointer border-none bg-transparent hover:bg-gray-dark-700 transition-colors"
+                      className="flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md text-sm font-medium text-gray-dark-200 cursor-pointer border-none bg-transparent hover:bg-gray-dark-700 transition-colors"
                     >
                       <Plus className="size-4" />
                       <span>New chat</span>
@@ -1586,7 +1596,7 @@ function HomeSidebar({ chatList, activeChatId, onOpenChat, onRequestDelete }: {
     <div className="flex flex-col h-full">
     <div className="p-3 overflow-y-auto flex flex-col gap-2 flex-1 min-h-0">
       {chatList.length === 0 ? (
-        <div className="px-2.5 py-2 text-[11px] text-muted-foreground/60 leading-relaxed">
+        <div className="px-2.5 py-2 text-xs text-muted-foreground leading-relaxed">
           Your chat history will appear here.
         </div>
       ) : (
@@ -1674,13 +1684,13 @@ function HomeChatStream({ messages, title, onClose, hasHistory, onToggleHistory 
             className="flex items-center gap-1 cursor-pointer border-none bg-transparent p-0"
           >
             <Clock className="size-4 text-gray-dark-200" />
-            <span className="text-[14px] text-gray-dark-200">Chat history</span>
+            <span className="text-sm text-gray-dark-200">Chat history</span>
           </button>
           <button onClick={onClose} className="shrink-0 size-6 rounded-md bg-gray-dark-700 cursor-pointer border-none hover:bg-gray-dark-600 transition-colors grid place-items-center" aria-label="Close chat">
             <X className="size-4 text-white" />
           </button>
         </div>
-        <div className="text-[16px] font-medium text-white">
+        <div className="text-base font-medium text-white">
           {title || "New chat"}
         </div>
       </div>
@@ -1734,7 +1744,7 @@ function FilingProgressCard({ percent, daysLeft, onGoToFiling }: {
     >
       <div className="px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <span className="text-[18px] leading-[26px] font-medium text-foreground">Filing progress</span>
+          <span className="text-base font-medium text-foreground">Filing progress</span>
           {daysLeft != null && (
             <span className="bg-[#57130a] text-[#fee4e2] text-xs px-1.5 py-0.5 rounded-full">
               {daysLeft} days to file · Apr 15
@@ -1748,8 +1758,8 @@ function FilingProgressCard({ percent, daysLeft, onGoToFiling }: {
       <div className="px-3"><Separator className="bg-gray-dark-700" /></div>
       <div className="px-4 py-4">
         <div className="flex items-baseline gap-4">
-          <div className="text-[32px] font-medium text-foreground tracking-tight">{percent}%</div>
-          <div className="text-[13px] text-muted-foreground">
+          <div className="text-3xl font-semibold text-foreground tracking-tight tabular-nums">{percent}%</div>
+          <div className="text-sm text-muted-foreground">
             {doneCount} of {FILING_STEPS.length} sections complete
             {currentStep && <> · on <span className="text-brand-400 font-medium">{currentStep.label}</span></>}
           </div>
@@ -1891,7 +1901,7 @@ function StrategyRow({ s, state, selected, onClick }: {
       <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
         <span className="text-sm font-medium text-foreground truncate">{s.title}</span>
         {(s.tags || []).map((tag) => (
-          <Badge key={tag} variant="outline" className="rounded-full text-[11px] font-normal">
+          <Badge key={tag} variant="outline" className="rounded-full text-xs font-normal">
             {tag}
           </Badge>
         ))}
@@ -1899,7 +1909,7 @@ function StrategyRow({ s, state, selected, onClick }: {
 
       <div className="text-right shrink-0">
         {s.tier === "complex" ? (
-          <div className="text-[13px] text-brand-400 font-medium">
+          <div className="text-sm text-brand-400 font-medium">
             {s.personalized ? "Modeled in chat" : "Not for you"}
           </div>
         ) : s.savings != null ? (
@@ -1907,7 +1917,7 @@ function StrategyRow({ s, state, selected, onClick }: {
             ${s.savings.toLocaleString()}
           </div>
         ) : (
-          <div className="text-[13px] text-muted-foreground">Not for you</div>
+          <div className="text-sm text-muted-foreground">Not for you</div>
         )}
       </div>
     </div>
@@ -1932,9 +1942,9 @@ function PlanningTab({ states, setStates, section, setSection }: {
       onValueChange={setSection}
       className="h-full overflow-hidden gap-0"
     >
-      <SideNavBarTabsList variant="default" className="w-[220px] [&_svg]:hidden">
-        <SideNavBarTabsTrigger value="tax-plan">2026 Tax Plan</SideNavBarTabsTrigger>
-        <SideNavBarTabsTrigger value="w4-estimator">W-4 Estimator</SideNavBarTabsTrigger>
+      <SideNavBarTabsList variant="default" className={sideNavList}>
+        <SideNavBarTabsTrigger value="tax-plan">2026 tax plan</SideNavBarTabsTrigger>
+        <SideNavBarTabsTrigger value="w4-estimator">W-4 estimator</SideNavBarTabsTrigger>
         <SideNavBarTabsTrigger value="advance-payments">Advance payments</SideNavBarTabsTrigger>
       </SideNavBarTabsList>
       <SideNavBarTabsContent value="tax-plan" className="flex min-h-0 overflow-hidden rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900">
@@ -2022,7 +2032,7 @@ function FilterGroup({ label, options, selected, onToggle }: {
         {options.map((opt) => (
           <label
             key={opt.id}
-            className="flex items-center gap-2.5 px-1 py-1.5 cursor-pointer rounded text-[13px] text-foreground/80 select-none hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-2.5 px-1 py-1.5 cursor-pointer rounded text-sm text-gray-dark-200 select-none hover:bg-muted/50 transition-colors"
           >
             <Checkbox
               checked={selected.includes(opt.id)}
@@ -2042,7 +2052,7 @@ function StrategyFilteredEmpty({ onClear }: { onClear: () => void }) {
       <div className="text-sm font-medium text-foreground mb-1.5">
         No strategies match your filters
       </div>
-      <div className="text-[13px] text-muted-foreground leading-relaxed max-w-[360px] mx-auto mb-4">
+      <div className="text-sm text-muted-foreground leading-relaxed max-w-[360px] mx-auto mb-4">
         Try widening the impact or effort levels you've selected.
       </div>
       <Button variant="outline" size="sm" onClick={onClear}>Clear filters</Button>
@@ -2070,7 +2080,7 @@ function StrategyEmptyState({ view }: { view: string }) {
   return (
     <div className="py-10 px-6 text-center">
       <div className="text-sm font-medium text-foreground mb-1.5">{c.title}</div>
-      <div className="text-[13px] text-muted-foreground leading-relaxed max-w-[360px] mx-auto">{c.body}</div>
+      <div className="text-sm text-muted-foreground leading-relaxed max-w-[360px] mx-auto">{c.body}</div>
     </div>
   )
 }
@@ -2178,7 +2188,7 @@ function TaxPlanView({ states, setStates }: {
       <div className="flex flex-col h-full overflow-hidden min-w-0">
         <div className="pl-4 pr-3 pt-4 shrink-0">
           <div className="mb-8">
-            <div className="text-[18px] leading-7 font-medium text-foreground mb-5">2026 tax plan</div>
+            <div className="text-lg font-medium text-foreground mb-5">2026 tax plan</div>
             <PlanningTaxPlanCard
               total={inPlanTotal}
               count={inPlanCount}
@@ -2192,19 +2202,19 @@ function TaxPlanView({ states, setStates }: {
               <SlidingTabsList value={view}>
                 <TabsTrigger value="personalized" className={cn("gap-1.5", slidingTrigger)}>
                   Personalized
-                  <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-[10px] leading-3 font-normal text-[#fffef9] min-w-4 text-center">
+                  <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-xs leading-3 font-normal text-foreground min-w-4 text-center">
                     {STRATEGIES.filter(s => s.personalized && states[s.id] !== "SKIPPED").length}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger value="archived" className={cn("gap-1.5", slidingTrigger)}>
                   Archived
-                  <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-[10px] leading-3 font-normal text-[#fffef9] min-w-4 text-center">
+                  <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-xs leading-3 font-normal text-foreground min-w-4 text-center">
                     {STRATEGIES.filter(s => s.personalized && states[s.id] === "SKIPPED").length}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger value="others" className={cn("gap-1.5", slidingTrigger)}>
                   Others
-                  <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-[10px] leading-3 font-normal text-[#fffef9] min-w-4 text-center">
+                  <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-xs leading-3 font-normal text-foreground min-w-4 text-center">
                     {STRATEGIES.filter(s => !s.personalized).length}
                   </span>
                 </TabsTrigger>
@@ -2281,8 +2291,8 @@ function W4EstimatorView() {
       <div className="flex flex-col h-full overflow-hidden min-w-0">
         <div className="pl-4 pr-3 pt-4 shrink-0">
           <div className="mb-6">
-            <div className="text-[18px] leading-7 font-medium text-foreground mb-1">Withholding simulator</div>
-            <p className="text-[13px] text-muted-foreground leading-relaxed">
+            <div className="text-lg font-medium text-foreground mb-1">Withholding simulator</div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Your RSU vests withhold at a flat 22%. Your real marginal rate is closer
               to 37%. The IRS expects the difference in April — simulate it now.
             </p>
@@ -2292,10 +2302,10 @@ function W4EstimatorView() {
             <CardContent>
               <div className="flex justify-between items-start gap-3">
                 <div>
-                  <div className="text-[13px] text-foreground/80">{gap > 0 ? "You'll owe" : "You're covered"}</div>
+                  <div className="text-sm text-gray-dark-200">{gap > 0 ? "You'll owe" : "You're covered"}</div>
                   <div className={cn(
-                    "text-[30px] font-medium tracking-tight mt-1",
-                    gap > 0 ? "text-amber-600" : "text-emerald-600"
+                    "text-3xl font-semibold tracking-tight tabular-nums mt-1",
+                    gap > 0 ? "text-amber-400" : "text-emerald-400"
                   )}>
                     ${gap.toLocaleString()}
                   </div>
@@ -2311,7 +2321,7 @@ function W4EstimatorView() {
                   ? "Along with possible underpayment penalty (~8% APR on the shortfall)"
                   : "You're within safe-harbor — no penalty expected"}
               </div>
-              <div className="flex justify-between text-[11px] text-muted-foreground mt-4 mb-1.5 uppercase tracking-wider">
+              <div className="flex justify-between text-xs text-muted-foreground mt-4 mb-1.5">
                 <span>Withheld so far: ${totalWithheld.toLocaleString()}</span>
                 <span>Federal tax owed: ${taxOwed.toLocaleString()}</span>
               </div>
@@ -2406,8 +2416,8 @@ function SimulatorSlider({ label, value, onChange, min, max, step, hint, accent 
   return (
     <div>
       <div className="flex justify-between items-baseline mb-2">
-        <Label className="text-[13px] font-medium">{label}</Label>
-        <span className="text-[13px] text-foreground font-medium tabular-nums">
+        <Label className="text-sm font-medium">{label}</Label>
+        <span className="text-sm text-foreground font-medium tabular-nums">
           ${value.toLocaleString()}
         </span>
       </div>
@@ -2420,7 +2430,7 @@ function SimulatorSlider({ label, value, onChange, min, max, step, hint, accent 
         className={cn(accent && "[&_[data-slot=slider-thumb]]:border-brand-600 [&_[data-slot=slider-range]]:bg-brand-600")}
       />
       {hint && (
-        <div className="text-[11px] text-muted-foreground mt-1 leading-snug">{hint}</div>
+        <div className="text-xs text-muted-foreground mt-1 leading-snug">{hint}</div>
       )}
     </div>
   )
@@ -2440,8 +2450,8 @@ function SummaryBreakdown({ ret }: { ret: ReturnResult }) {
   return (
     <div className="max-w-[580px] mx-auto flex flex-col gap-6">
       <div className="flex flex-col items-center gap-1.5 text-center">
-        <span className="text-[14px] leading-[20px] text-white font-[Manrope]">{ret.totalBack >= 0 ? "You’re getting back" : "You owe"}</span>
-        <span className="text-[24px] leading-[28px] font-semibold text-white font-[Manrope]">{money(ret.totalBack)}</span>
+        <span className="text-sm text-white">{ret.totalBack >= 0 ? "You’re getting back" : "You owe"}</span>
+        <span className="text-3xl font-semibold tracking-tight tabular-nums text-white">{money(ret.totalBack)}</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
         {[
@@ -2450,8 +2460,8 @@ function SummaryBreakdown({ ret }: { ret: ReturnResult }) {
           { label: "Credits", value: ret.credits },
         ].map(card => (
           <div key={card.label} className="bg-gray-dark-900 border border-gray-dark-700 rounded-lg px-3 py-2.5">
-            <div className="text-[12px] leading-[16px] text-gray-dark-100 font-[Manrope]">{card.label}</div>
-            <div className="text-[18px] leading-[24px] font-semibold text-white font-[Manrope] mt-1">{money(card.value)}</div>
+            <div className="text-xs text-gray-dark-200">{card.label}</div>
+            <div className="text-lg font-semibold tabular-nums text-white mt-1">{money(card.value)}</div>
           </div>
         ))}
       </div>
@@ -2467,13 +2477,13 @@ function SummaryBreakdown({ ret }: { ret: ReturnResult }) {
                 <div className={cn("absolute left-0 top-0 size-[12.5px] rounded-[2.5px] backdrop-blur-sm", sec.color)} />
                 <CoinsDollar className="absolute inset-0 size-5 text-white" />
               </div>
-              <span className="flex-1 text-[14px] leading-[20px] text-white font-[Manrope] tracking-[-0.28px]">{sec.label}</span>
+              <span className="flex-1 text-sm text-white">{sec.label}</span>
               <ChevronRight className={cn("size-5 text-muted-foreground transition-transform duration-200", openSection === i && "rotate-90")} />
             </button>
             {openSection === i && (
               <div className="flex flex-col gap-2 px-2 pb-3 animate-[filing-accordion-open_0.3s_cubic-bezier(0.2,0.8,0.2,1)]">
                 {sec.items.map((item, j) => (
-                  <div key={j} className="flex items-center justify-between text-[13px] font-[Manrope]">
+                  <div key={j} className="flex items-center justify-between text-sm">
                     <span className="text-gray-dark-200">{item.label}</span>
                     <span className={cn("font-mono tabular-nums", item.highlight ? "text-emerald-400 font-medium" : "text-white")}>{item.value < 0 ? "−" : ""}{money(item.value)}</span>
                   </div>
@@ -2503,7 +2513,7 @@ function FilingCanvasSection({ section, isOpen, isActive, activeItem, onToggle }
           "bg-gray-dark-950"
         )}>
           <div className={cn("size-2 rounded-full transition-colors", isActive || done ? "bg-brand-400 shadow-[0_0_8px_var(--brand-400)]" : "bg-gray-dark-500")} />
-          <span className="text-[14px] leading-[22px] text-gray-dark-200 font-medium flex-1">{section.label}</span>
+          <span className="text-sm leading-[22px] text-gray-dark-200 font-medium flex-1">{section.label}</span>
           <div className={cn(
             "relative rounded-full px-2 py-0.5 text-xs font-medium tabular-nums transition-colors overflow-hidden",
             done ? "bg-brand-400 text-gray-dark-950" : isActive ? "bg-brand-600 text-white" : "bg-gray-dark-700 text-gray-dark-200"
@@ -2531,11 +2541,11 @@ function FilingCanvasSection({ section, isOpen, isActive, activeItem, onToggle }
           ) : (
             <div className="size-[18px] rounded-full border border-gray-dark-700 shrink-0" />
           )}
-          <span className={cn("flex-1 text-[13px] uppercase tracking-[0.04em] font-medium transition-colors duration-300", isActive ? "text-white font-semibold" : isComplete ? "text-white" : "text-gray-dark-200")}>
+          <span className={cn("flex-1 text-sm font-medium transition-colors duration-300", isActive || isComplete ? "text-white" : "text-gray-dark-200")}>
             {section.label}
           </span>
           {isExtracting && (
-            <span className="text-[11px] uppercase tracking-[0.04em] font-medium text-brand-400 animate-pulse">
+            <span className="text-xs font-medium text-brand-400 animate-pulse">
               Extracting…
             </span>
           )}
@@ -2553,7 +2563,7 @@ function FilingCanvasSection({ section, isOpen, isActive, activeItem, onToggle }
                 const tags = (
                   <div className={cn("flex gap-1.5 min-w-0 flex-wrap", stacked ? "pl-6" : "flex-1")}>
                     {item.tags.map((tag, i) => (
-                      <span key={tag} className={cn(item.na ? "bg-transparent border border-gray-dark-700 text-gray-dark-400" : "bg-gray-dark-700 text-gray-dark-100", "text-xs font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap animate-[filing-tag-in_0.4s_cubic-bezier(0.2,0.8,0.2,1)_backwards]")} style={{ animationDelay: `${idx * 60 + 100 + i * 60}ms` }}>{tag}</span>
+                      <span key={tag} className={cn(item.na ? "bg-transparent border border-gray-dark-700 text-muted-foreground" : "bg-gray-dark-700 text-gray-dark-200", "text-xs font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap animate-[filing-tag-in_0.4s_cubic-bezier(0.2,0.8,0.2,1)_backwards]")} style={{ animationDelay: `${idx * 60 + 100 + i * 60}ms` }}>{tag}</span>
                     ))}
                   </div>
                 )
@@ -2564,9 +2574,9 @@ function FilingCanvasSection({ section, isOpen, isActive, activeItem, onToggle }
                         <circle cx="8" cy="8" r="7" fill="none" stroke="var(--brand-400)" strokeWidth="1" />
                         <path d="M4.5 8.5 L7 11 L11.5 5.5" fill="none" stroke="var(--brand-400)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
-                      <span className={cn("text-sm font-medium", item.na ? "text-gray-dark-400" : "text-white", stacked && "flex-1")}>{item.label}</span>
+                      <span className={cn("text-sm font-medium", item.na ? "text-muted-foreground" : "text-white", stacked && "flex-1")}>{item.label}</span>
                       {!stacked && tags}
-                      <button className="bg-gray-dark-950 border border-gray-dark-700/50 text-gray-dark-25 text-xs px-1.5 py-0.5 rounded-md shrink-0 cursor-pointer hover:border-brand-400 transition-colors">
+                      <button className="bg-gray-dark-950 border border-gray-dark-700/50 text-foreground text-xs px-1.5 py-0.5 rounded-md shrink-0 cursor-pointer hover:border-brand-400 transition-colors">
                         edit
                       </button>
                     </div>
@@ -2587,8 +2597,8 @@ function FilingCanvasSection({ section, isOpen, isActive, activeItem, onToggle }
                       {isCurrent && !isExtracting && <circle cx="8" cy="8" r="2" fill="var(--brand-400)"><animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite" /></circle>}
                     </svg>
                     <span className={cn("text-sm transition-colors duration-300", isCurrent || isExtracting ? "text-white font-medium" : "text-gray-dark-200")}>{item.label}</span>
-                    {isExtracting && <span className="ml-auto text-[11px] uppercase tracking-[0.04em] font-medium text-brand-400 animate-pulse">Extracting…</span>}
-                    {isCurrent && !isExtracting && <span className="ml-auto text-[11px] uppercase tracking-[0.04em] font-medium text-brand-400">Your turn</span>}
+                    {isExtracting && <span className="ml-auto text-xs font-medium text-brand-400 animate-pulse">Extracting…</span>}
+                    {isCurrent && !isExtracting && <span className="ml-auto text-xs font-medium text-brand-400">Your turn</span>}
                   </div>
                 )
               })}
@@ -2684,8 +2694,8 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
           to { opacity: 1; transform: translateX(0); }
         }
       `}</style>
-      <div className="px-4 pt-5 pb-4 flex items-center gap-3 shrink-0">
-        <span className="text-[18px] leading-[26px] font-medium text-white shrink-0">{isComplete ? "Overview" : "Building your return"}</span>
+      <div className="px-4 pt-4 pb-4 flex items-center gap-3 shrink-0">
+        <span className="text-lg font-medium text-white shrink-0">{isComplete ? "Overview" : "Building your return"}</span>
         {isComplete && (
           <Tabs value={canvasTab} onValueChange={setCanvasTab}>
             <SlidingTabsList value={canvasTab} className="gap-0.5">
@@ -2706,7 +2716,7 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
           </div>
         )}
         {isComplete && canvasTab === "draft" && (
-          <Button variant="outline" size="sm" className="shrink-0 gap-1 text-[14px] leading-4 h-7 pl-2 pr-1.5">
+          <Button variant="outline" size="sm" className="shrink-0 gap-1 text-sm leading-4 h-7 pl-2 pr-1.5">
             Download
             <Download className="size-4" />
           </Button>
@@ -2743,7 +2753,7 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
                 <div className="text-[9px] uppercase tracking-[1.2px] text-muted-foreground/60 font-semibold">
                   Department of the Treasury — Internal Revenue Service
                 </div>
-                <div className="text-base font-semibold text-foreground/80 mt-1">Form 1040 · 2026</div>
+                <div className="text-base font-semibold text-gray-dark-200 mt-1">Form 1040 · 2026</div>
                 <div className="text-[10px] text-muted-foreground mt-0.5">U.S. Individual Income Tax Return</div>
               </div>
               <div className="flex flex-col gap-3 text-sm text-muted-foreground">
@@ -2783,12 +2793,12 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
               <div className="flex items-baseline gap-6 mt-2">
                 <div>
                   <div className="text-xs text-muted-foreground mb-1">Federal</div>
-                  <div className="text-[24px] font-semibold text-white tracking-tight">$4,820</div>
+                  <div className="text-2xl font-semibold text-white tracking-tight tabular-nums">$4,820</div>
                 </div>
                 <div className="w-px h-8 bg-gray-dark-700" />
                 <div>
                   <div className="text-xs text-muted-foreground mb-1">California</div>
-                  <div className="text-[24px] font-semibold text-white tracking-tight">$1,210</div>
+                  <div className="text-2xl font-semibold text-white tracking-tight tabular-nums">$1,210</div>
                 </div>
               </div>
             </div>
@@ -2807,7 +2817,7 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
               "bg-[#171717]"
             )}>
               <div className={cn("size-2 rounded-full transition-colors shrink-0", isDraftActive || done ? "bg-brand-400 shadow-[0_0_8px_var(--brand-400)]" : "bg-gray-dark-500")} />
-              <span className="text-[14px] leading-[22px] text-gray-dark-200 font-medium whitespace-nowrap">{draftSection.label}</span>
+              <span className="text-sm leading-[22px] text-gray-dark-200 font-medium whitespace-nowrap">{draftSection.label}</span>
               <div className={cn(
                 "relative flex items-center gap-1 rounded-full pl-0.5 pr-1.5 py-0.5 text-xs font-medium tabular-nums transition-colors overflow-hidden shrink-0",
                 "shadow-[0px_1px_2px_rgba(8,8,8,0.2),0px_4px_4px_rgba(8,8,8,0.08)]",
@@ -2835,36 +2845,22 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
 
 // ── FILING tab ──────────────────────────────────────────────────────────────
 function FilingTab({ section, setSection }: { section: string; setSection: (s: string) => void }) {
-
   const contentClass = "flex h-full min-h-0 overflow-hidden rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900"
 
-  const triggerClass = (active: boolean) => cn(
-    "relative mx-3 my-1.5 flex h-9 items-center gap-2 rounded-lg border border-transparent px-2 py-1.5 text-sm whitespace-nowrap outline-none transition-colors cursor-pointer bg-transparent",
-    "text-gray-dark-400 hover:bg-gray-dark-800",
-    active && "font-medium bg-gray-dark-900 border-gray-dark-700 text-white shadow-[inset_0_1px_1px_0_rgba(255,255,255,0.12),inset_0_2px_2px_0_rgba(255,255,255,0.2)]",
-    "before:pointer-events-none before:absolute before:-left-3 before:top-1/2 before:h-6 before:w-0.5 before:-translate-y-1/2 before:rounded-r-lg before:transition-colors",
-    active ? "before:bg-brand-400 before:shadow-[0_0_8px_var(--brand-400)]" : "before:bg-transparent"
-  )
-
+  // Same nav component as Planning and Documents; every year stays mounted so chats keep their progress
   return (
-    <div className="flex h-full overflow-hidden gap-0">
-      <div className="w-[220px] shrink-0 flex flex-col gap-0 pt-2 overflow-y-auto">
-        <button onClick={() => setSection("2026")} className={triggerClass(section === "2026")}>
-          <span className="min-w-0 flex-1 truncate text-left">2026</span>
-        </button>
-        <button onClick={() => setSection("2025")} className={triggerClass(section === "2025")}>
-          <span className="min-w-0 flex-1 truncate text-left">2025</span>
-        </button>
-        <button onClick={() => setSection("2024")} className={triggerClass(section === "2024")}>
-          <span className="min-w-0 flex-1 truncate text-left">2024</span>
-        </button>
-      </div>
+    <SideNavBarTabs value={section} onValueChange={setSection} className="h-full overflow-hidden gap-0">
+      <SideNavBarTabsList variant="default" className={sideNavList}>
+        {["2026", "2025", "2024"].map(y => (
+          <SideNavBarTabsTrigger key={y} value={y}>{y}</SideNavBarTabsTrigger>
+        ))}
+      </SideNavBarTabsList>
       <div className="flex-1 min-w-0 h-full">
         <div className={cn(contentClass, section !== "2026" && "hidden")}><CurrentReturnFiling /></div>
         <div className={cn(contentClass, section !== "2025" && "hidden")}><ReturnSummary year="2025" /></div>
         <div className={cn(contentClass, section !== "2024" && "hidden")}><ReturnSummary year="2024" /></div>
       </div>
-    </div>
+    </SideNavBarTabs>
   )
 }
 
@@ -2892,19 +2888,19 @@ function ProfileConfirmationForm({ onConfirm }: { onConfirm?: () => void }) {
       <div className="rounded-xl border border-gray-dark-700 bg-gray-dark-900 p-5">
         <div className="grid grid-cols-2 gap-x-4 gap-y-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] text-muted-foreground">First name</Label>
+            <Label className="text-sm text-muted-foreground">First name</Label>
             <Input value={form.firstName} onChange={upd("firstName")} className="h-10 bg-gray-dark-800 border-gray-dark-700 text-white" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] text-muted-foreground">Last name</Label>
+            <Label className="text-sm text-muted-foreground">Last name</Label>
             <Input value={form.lastName} onChange={upd("lastName")} className="h-10 bg-gray-dark-800 border-gray-dark-700 text-white" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] text-muted-foreground">Email</Label>
+            <Label className="text-sm text-muted-foreground">Email</Label>
             <Input type="email" value={form.email} onChange={upd("email")} className="h-10 bg-gray-dark-800 border-gray-dark-700 text-white" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] text-muted-foreground">Phone number</Label>
+            <Label className="text-sm text-muted-foreground">Phone number</Label>
             <div className="flex gap-2">
               <NativeSelect value={form.countryCode} onChange={upd("countryCode")} className="w-[72px] shrink-0 [&_select]:h-10 [&_select]:bg-gray-dark-800 [&_select]:border-gray-dark-700 [&_select]:text-white">
                 <NativeSelectOption value="+1">+1</NativeSelectOption>
@@ -2915,7 +2911,7 @@ function ProfileConfirmationForm({ onConfirm }: { onConfirm?: () => void }) {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] text-muted-foreground">Date of birth</Label>
+            <Label className="text-sm text-muted-foreground">Date of birth</Label>
             <Popover open={dobOpen} onOpenChange={setDobOpen}>
               <PopoverTrigger asChild>
                 <button className="h-10 w-full rounded-lg border border-gray-dark-700 bg-gray-dark-800 px-2.5 py-1 text-sm text-white text-left flex items-center justify-between cursor-pointer hover:border-gray-dark-600 transition-colors">
@@ -2937,7 +2933,7 @@ function ProfileConfirmationForm({ onConfirm }: { onConfirm?: () => void }) {
             </Popover>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] text-muted-foreground">Marital status</Label>
+            <Label className="text-sm text-muted-foreground">Marital status</Label>
             <NativeSelect value={form.maritalStatus} onChange={upd("maritalStatus")} className="w-full [&_select]:h-10 [&_select]:bg-gray-dark-800 [&_select]:border-gray-dark-700 [&_select]:text-white">
               <NativeSelectOption value="Single">Single</NativeSelectOption>
               <NativeSelectOption value="Married">Married</NativeSelectOption>
@@ -2946,7 +2942,7 @@ function ProfileConfirmationForm({ onConfirm }: { onConfirm?: () => void }) {
             </NativeSelect>
           </div>
           <div className="col-span-2 flex flex-col gap-1.5">
-            <Label className="text-[13px] text-muted-foreground">Address</Label>
+            <Label className="text-sm text-muted-foreground">Address</Label>
             <div className="grid grid-cols-2 gap-2">
               <Input value={form.address} onChange={upd("address")} className="h-10 bg-gray-dark-800 border-gray-dark-700 text-white" />
               <NativeSelect value={form.apt} onChange={upd("apt")} className="w-full [&_select]:h-10 [&_select]:bg-gray-dark-800 [&_select]:border-gray-dark-700 [&_select]:text-white">
@@ -3169,7 +3165,7 @@ function CurrentReturnFiling() {
       <div className="flex-1 overflow-hidden min-w-0 h-full">
         <ChatSurface
           flush
-          header="2026 Return Filing"
+          header="2026 return filing"
           messages={thinkingMessages}
           chips={currentChips}
           onChip={onChip}
@@ -3207,10 +3203,10 @@ function AdvanceTaxPayments() {
   ])
 
   const [quarters, setQuarters] = useState<Quarter[]>([
-    { id: "q1", label: "Q1 estimated payment", datePill: "APR 15", range: "Jan 1 - Mar 31", dueDate: "April 15, 2026", amount: 20456, federal: 14531, state: 5925, daysUntil: 23, confirmed: false, current: true },
-    { id: "q2", label: "Q2 estimated payment", datePill: "JUN 15", range: "Apr 1 - May 31", dueDate: "June 15, 2026", amount: 20456, federal: 14531, state: 5925, daysUntil: 85, confirmed: false, current: false },
-    { id: "q3", label: "Q3 estimated payment", datePill: "SEP 15", range: "Jun 1 - Aug 31", dueDate: "September 15, 2026", amount: 20456, federal: 14531, state: 5925, daysUntil: 177, confirmed: false, current: false },
-    { id: "q4", label: "Q4 estimated payment", datePill: "JAN 15", range: "Sep 1 - Dec 31", dueDate: "January 15, 2027", amount: 20456, federal: 14531, state: 5925, daysUntil: 299, confirmed: false, current: false },
+    { id: "q1", label: "Q1 estimated payment", datePill: "Apr 15", range: "Jan 1 - Mar 31", dueDate: "April 15, 2026", amount: 20456, federal: 14531, state: 5925, daysUntil: 23, confirmed: false, current: true },
+    { id: "q2", label: "Q2 estimated payment", datePill: "Jun 15", range: "Apr 1 - May 31", dueDate: "June 15, 2026", amount: 20456, federal: 14531, state: 5925, daysUntil: 85, confirmed: false, current: false },
+    { id: "q3", label: "Q3 estimated payment", datePill: "Sep 15", range: "Jun 1 - Aug 31", dueDate: "September 15, 2026", amount: 20456, federal: 14531, state: 5925, daysUntil: 177, confirmed: false, current: false },
+    { id: "q4", label: "Q4 estimated payment", datePill: "Jan 15", range: "Sep 1 - Dec 31", dueDate: "January 15, 2027", amount: 20456, federal: 14531, state: 5925, daysUntil: 299, confirmed: false, current: false },
   ])
 
   const onConfirmInChat = (quarter: Quarter) => {
@@ -3274,9 +3270,9 @@ function AdvanceTaxCanvas({ quarters, onConfirmInChat }: {
   return (
     <div className="flex-[0_1_560px] border-l border-border bg-gray-dark-950 p-4 overflow-y-auto flex flex-col gap-4">
       <div className="flex items-baseline gap-2">
-        <span className="text-[18px] leading-7 font-medium text-foreground">Estimated payments</span>
+        <span className="text-lg font-medium text-foreground">Estimated payments</span>
         <span className="text-base text-muted-foreground">·</span>
-        <span className="text-base font-medium text-foreground/80 tabular-nums">
+        <span className="text-base font-medium text-gray-dark-200 tabular-nums">
           ${totalEstimate.toLocaleString()} total
         </span>
       </div>
@@ -3305,19 +3301,19 @@ function QuarterCard({ q, expanded, onToggle, onConfirm }: {
         onClick={onToggle}
         className="w-full p-3 bg-transparent border-none cursor-pointer flex items-center gap-3 text-left hover:bg-gray-dark-800 transition-colors"
       >
-        <Badge variant="outline" className="bg-brand-500/15 text-brand-400 border-transparent rounded-md px-2.5 py-1.5 text-[11px] font-medium tracking-wider tabular-nums shrink-0">
+        <Badge variant="outline" className="bg-brand-500/15 text-brand-400 border-transparent rounded-md px-2.5 py-1.5 text-xs font-medium tabular-nums shrink-0">
           {q.datePill}
         </Badge>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground">{q.label}</span>
             {q.current && !q.confirmed && (
-              <Badge className="bg-red-50 text-red-700 border-transparent rounded-full text-[10px] font-semibold tracking-wider">
-                {q.daysUntil} DAYS
+              <Badge className="bg-red-500/15 text-red-400 border-transparent rounded-full text-xs font-semibold">
+                {q.daysUntil} days
               </Badge>
             )}
             {q.confirmed && (
-              <span className="text-[10px] text-emerald-600 font-medium uppercase tracking-wider">Paid</span>
+              <span className="text-xs text-emerald-400 font-medium">Paid</span>
             )}
           </div>
         </div>
@@ -3325,7 +3321,7 @@ function QuarterCard({ q, expanded, onToggle, onConfirm }: {
           ${q.amount.toLocaleString()}
         </div>
         <span className={cn(
-          "text-muted-foreground text-[11px] leading-none ml-1 transition-transform",
+          "text-muted-foreground text-xs leading-none ml-1 transition-transform",
           expanded ? "rotate-180" : "rotate-0"
         )}>▾</span>
       </button>
@@ -3386,7 +3382,7 @@ const PRIOR_YEAR_DATA: Record<string, {
   "2025": {
     summary: { income: "$472,000", tax: "$118,400", refund: 2140, isRefund: true },
     chat: [
-      { role: "assistant", body: "Let's start your 2025 return. Are you filing as Single, Married, or Head of Household?" },
+      { role: "assistant", body: "Let's start your 2025 return. Are you filing as single, married, or head of household?" },
       { role: "user", body: "Married filing jointly again." },
       { role: "assistant", body: "Got it. Same dependents as last year — your two children?" },
       { role: "user", body: "Yes, same two." },
@@ -3394,7 +3390,7 @@ const PRIOR_YEAR_DATA: Record<string, {
       { role: "user", body: "Uploading.", attachment: "W2_2025.pdf" },
       { role: "assistant", body: "I see wages of $268,000 and another $204,000 from your spouse. With the standard deduction and your federal withholding of $58,200, you're looking at a refund." },
       { role: "user", body: "Sounds right. Let's finalize." },
-      { role: "assistant", body: "Done. Your 2025 return was filed on April 8, 2026 and accepted by the IRS.\n\nSummary\nFiling status: Married Filing Jointly\nTotal income: $472,000\nFederal tax: $118,400\nRefund: $2,140 (deposited Apr 22, 2026)\n\nAsk me anything about this return — I have full context." },
+      { role: "assistant", body: "Done. Your 2025 return was filed on April 8, 2026 and accepted by the IRS.\n\nSummary\nFiling status: Married filing jointly\nTotal income: $472,000\nFederal tax: $118,400\nRefund: $2,140 (deposited Apr 22, 2026)\n\nAsk me anything about this return — I have full context." },
     ],
     chips: [
       { id: "why-refund", label: "Why was my refund so small?" },
@@ -3414,7 +3410,7 @@ const PRIOR_YEAR_DATA: Record<string, {
       { role: "assistant", body: "Got it. $398,000 combined household income. Any charitable contributions or mortgage interest?" },
       { role: "user", body: "Yes — $24,000 mortgage interest, $8,000 to a DAF." },
       { role: "assistant", body: "Itemizing makes sense for you. Federal tax comes to $92,800 after deductions and credits." },
-      { role: "assistant", body: "Your 2024 return was filed on April 12, 2025 and accepted.\n\nSummary\nFiling status: Married Filing Jointly\nTotal income: $398,000\nFederal tax: $92,800\nRefund: $1,890 (deposited Apr 28, 2025)\n\nAsk me anything about this return — I have full context." },
+      { role: "assistant", body: "Your 2024 return was filed on April 12, 2025 and accepted.\n\nSummary\nFiling status: Married filing jointly\nTotal income: $398,000\nFederal tax: $92,800\nRefund: $1,890 (deposited Apr 28, 2025)\n\nAsk me anything about this return — I have full context." },
     ],
     chips: [
       { id: "deductions", label: "What deductions did I take?" },
@@ -3429,7 +3425,7 @@ function ReturnSummary({ year }: { year: string }) {
   if (!data) {
     return (
       <div className="px-4 py-4">
-        <Eyebrow>Return Summary</Eyebrow>
+        <Eyebrow>Return summary</Eyebrow>
         <div className="text-base text-muted-foreground mt-3">No data available for {year}.</div>
       </div>
     )
@@ -3460,13 +3456,13 @@ function PdfPreviewPanel({ year }: { year: string }) {
     <div className="flex-[0_1_560px] border-l border-border bg-gray-dark-950 overflow-y-auto flex flex-col">
       <Tabs value={previewTab} onValueChange={setPreviewTab} className="flex flex-col h-full gap-0">
         <div className="flex items-center gap-3 px-4 pt-4 pb-3 shrink-0">
-          <div className="text-[18px] leading-7 font-medium text-foreground shrink-0">Preview</div>
+          <div className="text-lg font-medium text-foreground shrink-0">Preview</div>
           <SlidingTabsList value={previewTab} className="gap-0.5">
             <TabsTrigger value="1040" className={slidingTrigger}>1040 PDF</TabsTrigger>
             <TabsTrigger value="docs" className={slidingTrigger}>Other documents</TabsTrigger>
           </SlidingTabsList>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="shrink-0 gap-1 text-[14px] leading-4 h-7 pl-2 pr-1.5">
+          <Button variant="outline" size="sm" className="shrink-0 gap-1 text-sm leading-4 h-7 pl-2 pr-1.5">
             Download
             <Download className="size-4" />
           </Button>
@@ -3479,7 +3475,7 @@ function PdfPreviewPanel({ year }: { year: string }) {
               <div className="text-[9px] uppercase tracking-[1.2px] text-muted-foreground/60 font-semibold">
                 Department of the Treasury — Internal Revenue Service
               </div>
-              <div className="text-base font-semibold text-foreground/80 mt-1">Form 1040 · {year}</div>
+              <div className="text-base font-semibold text-gray-dark-200 mt-1">Form 1040 · {year}</div>
               <div className="text-[10px] text-muted-foreground mt-0.5">U.S. Individual Income Tax Return</div>
             </div>
 
@@ -3493,13 +3489,13 @@ function PdfPreviewPanel({ year }: { year: string }) {
               <Badge variant="outline" className="text-emerald-600 border-emerald-600 rounded text-[10px] font-semibold uppercase tracking-[1px] -rotate-2">
                 Accepted
               </Badge>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 Filed {year === "2025" ? "Apr 8, 2026" : "Apr 12, 2025"}
               </span>
             </div>
           </div>
 
-          <div className="text-[11px] text-muted-foreground/60 text-center py-1">
+          <div className="text-xs text-muted-foreground text-center py-1">
             Click download to get the full PDF
           </div>
         </TabsContent>
@@ -3508,7 +3504,7 @@ function PdfPreviewPanel({ year }: { year: string }) {
           {yearDocs.length === 0 ? (
             <div className="py-10 px-6 text-center bg-card border border-border rounded-[10px]">
               <div className="text-sm font-medium text-foreground mb-1.5">No documents for {year}</div>
-              <div className="text-[13px] text-muted-foreground">Documents will appear here once uploaded.</div>
+              <div className="text-sm text-muted-foreground">Documents will appear here once uploaded.</div>
             </div>
           ) : (
             <div className="bg-card border border-border rounded-[10px] overflow-hidden">
@@ -3585,7 +3581,7 @@ function DocStatusPill({ status }: { status: string }) {
   }
   const { label, cls } = map[status] ?? map.queued
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-4", cls)}>
+    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium leading-4", cls)}>
       {label}
     </span>
   )
@@ -3629,7 +3625,7 @@ function DocumentsHub({ activeYear, setActiveYear }: { activeYear: string; setAc
         onValueChange={handleYearChange}
         className="shrink-0"
       >
-        <SideNavBarTabsList variant="default" className="w-[220px] [&_svg]:hidden">
+        <SideNavBarTabsList variant="default" className={sideNavList}>
           {years.map((y) => (
             <SideNavBarTabsTrigger key={y} value={y}>{y}</SideNavBarTabsTrigger>
           ))}
@@ -3639,7 +3635,7 @@ function DocumentsHub({ activeYear, setActiveYear }: { activeYear: string; setAc
       <div className="docs-content flex h-full overflow-hidden min-w-0 flex-1 rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900">
         <div className="flex flex-col h-full overflow-hidden min-w-0 flex-1">
           <div className="px-4 pt-4 shrink-0">
-            <h1 className="text-[18px] leading-7 font-medium m-0 mb-6 tracking-tight text-foreground">
+            <h1 className="text-lg font-medium m-0 mb-6 text-foreground">
               {activeYear} documents
             </h1>
 
@@ -3649,7 +3645,7 @@ function DocumentsHub({ activeYear, setActiveYear }: { activeYear: string; setAc
                 {DOC_TYPES.map((t) => (
                   <TabsTrigger key={t} value={t} className={cn("gap-1.5", slidingTrigger)}>
                     {t}
-                    <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-[10px] leading-3 font-normal text-[#fffef9] min-w-4 text-center">
+                    <span className="inline-flex items-center justify-center rounded-[4px] bg-gray-dark-700 px-1 py-0.5 text-xs leading-3 font-normal text-foreground min-w-4 text-center">
                       {typeCounts[t]}
                     </span>
                   </TabsTrigger>
@@ -3664,7 +3660,7 @@ function DocumentsHub({ activeYear, setActiveYear }: { activeYear: string; setAc
                 <div className="text-sm font-medium text-foreground mb-1.5">
                   No {activeType.toLowerCase()} for {activeYear}
                 </div>
-                <div className="text-[13px] text-muted-foreground max-w-[360px] mx-auto">
+                <div className="text-sm text-muted-foreground max-w-[360px] mx-auto">
                   Documents in this category will show up here once they're added.
                 </div>
               </div>
@@ -3689,8 +3685,8 @@ function DocumentsHub({ activeYear, setActiveYear }: { activeYear: string; setAc
                           <span>{d.desc}</span>
                           {activeType === "All" && (
                             <>
-                              <span className="text-muted-foreground/60">·</span>
-                              <span className="text-muted-foreground/60">{d.irsType}</span>
+                              <span className="text-muted-foreground">·</span>
+                              <span className="text-muted-foreground">{d.irsType}</span>
                             </>
                           )}
                         </div>
@@ -3729,7 +3725,7 @@ function DocPreviewPanel({ doc, onClose }: {
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {isReceived && (
-            <Button variant="outline" size="sm" className="gap-1 text-[14px] leading-4 h-7 pl-2 pr-1.5">
+            <Button variant="outline" size="sm" className="gap-1 text-sm leading-4 h-7 pl-2 pr-1.5">
               Download
               <Download className="size-4" />
             </Button>
@@ -3759,7 +3755,7 @@ function DocPreviewPanel({ doc, onClose }: {
             <div className="text-sm font-medium text-foreground mb-1.5">
               {isQueued ? "Not yet received" : "We're waiting on this"}
             </div>
-            <div className="text-[13px] text-muted-foreground leading-relaxed max-w-[280px]">
+            <div className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
               {isQueued
                 ? "I'll request this once it's available from your provider."
                 : "Upload through the filing chat or I'll fetch it for you."}
@@ -3846,13 +3842,13 @@ function NotificationPanel({ open, onClose }: { open: boolean; onClose: () => vo
 
         {/* Header */}
         <div className="flex items-start gap-2">
-          <span className="text-[14px] font-medium leading-4 text-white">Notifications</span>
+          <span className="text-base font-medium text-white">Notifications</span>
           <div className="flex items-center gap-1 rounded-3xl">
             <span className="relative size-4 grid place-items-center">
               <span className="absolute size-2 rounded-full bg-[#f04438]" />
               <span className="absolute size-2 rounded-full bg-[#f04438] animate-ping opacity-75" />
             </span>
-            <span className="text-[14px] leading-4 text-[#fda29b]">{NOTIFICATIONS.length} pending items</span>
+            <span className="text-sm text-red-300">{NOTIFICATIONS.length} pending items</span>
           </div>
         </div>
 
@@ -3866,18 +3862,18 @@ function NotificationPanel({ open, onClose }: { open: boolean; onClose: () => vo
               <React.Fragment key={n.id + i}>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0 flex flex-col gap-1">
-                    <div className="text-[14px] font-medium leading-5 text-white">{n.title}</div>
-                    <div className="text-[12px] leading-4 text-gray-dark-100 flex items-center gap-1">
+                    <div className="text-sm font-medium leading-5 text-white">{n.title}</div>
+                    <div className="text-xs leading-4 text-gray-dark-200 flex items-center gap-1">
                       <span>{n.subtitle}</span>
                       {n.meta && (
                         <>
-                          <span className="text-gray-dark-100">·</span>
+                          <span className="text-gray-dark-200">·</span>
                           <span>{n.meta}</span>
                         </>
                       )}
                     </div>
                   </div>
-                  <button className="shrink-0 text-[14px] leading-4 text-[#3e9ef3] cursor-pointer border-none bg-transparent hover:underline">
+                  <button className="shrink-0 text-sm font-medium text-brand-400 cursor-pointer border-none bg-transparent hover:text-brand-300">
                     {n.action}
                   </button>
                 </div>
@@ -3932,7 +3928,7 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   key={item.key}
                   onClick={() => setProfileTab(item.key)}
                   className={cn(
-                    "relative z-[1] flex items-center gap-1.5 w-full px-[6px] py-1.5 rounded-lg text-[14px] leading-5 text-left cursor-pointer border-none transition-colors",
+                    "relative z-[1] flex items-center gap-1.5 w-full px-[6px] py-1.5 rounded-lg text-sm leading-5 text-left cursor-pointer border-none transition-colors",
                     profileTab === item.key
                       ? "text-white"
                       : "text-gray-dark-200 hover:text-white"
@@ -3948,7 +3944,7 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
           {/* Right content area */}
           <div className="flex-1 flex flex-col min-w-0 pt-[15px] pl-[16px] pr-[15px]">
             {/* Tab title */}
-            <div className="text-[14px] font-medium leading-[22px] text-white mb-[20px]">
+            <div className="text-base font-medium text-white mb-5">
               {profileTab === "personal" && "Profile information"}
               {profileTab === "tax" && "Tax profile"}
               {profileTab === "security" && "Profile security"}
@@ -3961,7 +3957,7 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   {/* Avatar */}
                   <div className="relative size-[112px]">
                     <div className="size-[112px] rounded-full bg-gray-dark-800 border border-gray-dark-700 grid place-items-center">
-                      <User03 className="size-16 text-gray-dark-100" />
+                      <User03 className="size-16 text-gray-dark-200" />
                     </div>
                     <div className="absolute bottom-0 right-0 size-7 rounded-full bg-gray-dark-700 border border-gray-dark-600 grid place-items-center">
                       <ImageUpload className="size-3.5 text-white" />
@@ -3971,26 +3967,26 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   {/* Form fields */}
                   <div className="flex flex-col gap-4 w-full">
                     <div className="flex flex-col gap-2">
-                      <Label className="px-1 text-[14px] text-white">Name</Label>
+                      <Label className="px-1 text-sm text-white">Name</Label>
                       <Input
                         readOnly
-                        defaultValue="John Doe"
-                        className="h-10 rounded-xl bg-gray-dark-800 border-gray-dark-700 px-3 text-[14px] text-white"
+                        defaultValue="Bhaskar Tiwari"
+                        className="h-10 rounded-xl bg-gray-dark-800 border-gray-dark-700 px-3 text-sm text-white"
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label className="px-1 text-[14px] text-white">Email</Label>
+                      <Label className="px-1 text-sm text-white">Email</Label>
                       <Input
                         readOnly
-                        defaultValue="johndoe@example.com"
-                        className="h-10 rounded-xl bg-gray-dark-800 border-gray-dark-700 px-3 text-[14px] text-white"
+                        defaultValue="bhaskartiwari@gmail.com"
+                        className="h-10 rounded-xl bg-gray-dark-800 border-gray-dark-700 px-3 text-sm text-white"
                       />
                     </div>
                   </div>
 
                   {/* Edit button — bottom right */}
                   <div className="flex justify-end w-full mt-auto">
-                    <Button variant="outline" size="sm" className="h-10 px-4 rounded-xl text-[14px]">
+                    <Button variant="outline" size="sm" className="h-10 px-4 rounded-xl text-sm">
                       Edit information
                     </Button>
                   </div>
@@ -4006,11 +4002,11 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                     { label: "NRI status", value: "Resident alien" },
                   ].map((field) => (
                     <div key={field.label} className="flex flex-col gap-2">
-                      <Label className="px-1 text-[14px] text-white">{field.label}</Label>
+                      <Label className="px-1 text-sm text-white">{field.label}</Label>
                       <Input
                         readOnly
                         defaultValue={field.value}
-                        className="h-10 rounded-xl bg-gray-dark-800 border-gray-dark-700 px-3 text-[14px] font-medium text-white"
+                        className="h-10 rounded-xl bg-gray-dark-800 border-gray-dark-700 px-3 text-sm font-medium text-white"
                       />
                     </div>
                   ))}
@@ -4022,10 +4018,10 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   {/* Email */}
                   <div className="flex items-center gap-12">
                     <div className="flex-1 min-w-0 flex flex-col gap-1">
-                      <div className="text-[16px] font-semibold leading-6 text-white">Email</div>
-                      <div className="text-[12px] leading-4 text-gray-dark-200">bhaskartiwari@gmail.com</div>
+                      <div className="text-sm font-medium text-white">Email</div>
+                      <div className="text-xs leading-4 text-gray-dark-200">bhaskartiwari@gmail.com</div>
                     </div>
-                    <Button variant="outline" size="sm" className="shrink-0 h-8 pl-3 pr-2 rounded-lg gap-1 text-[14px]">
+                    <Button variant="outline" size="sm" className="shrink-0 h-8 pl-3 pr-2 rounded-lg gap-1 text-sm">
                       Change email
                       <ChevronRight className="size-4" />
                     </Button>
@@ -4036,10 +4032,10 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   {/* Password */}
                   <div className="flex items-center gap-12">
                     <div className="flex-1 min-w-0 flex flex-col gap-1">
-                      <div className="text-[16px] font-semibold leading-6 text-white">Password</div>
-                      <div className="text-[12px] leading-4 text-gray-dark-200">************</div>
+                      <div className="text-sm font-medium text-white">Password</div>
+                      <div className="text-xs leading-4 text-gray-dark-200">************</div>
                     </div>
-                    <Button variant="outline" size="sm" className="shrink-0 h-8 pl-3 pr-2 rounded-lg gap-1 text-[14px]">
+                    <Button variant="outline" size="sm" className="shrink-0 h-8 pl-3 pr-2 rounded-lg gap-1 text-sm">
                       Update password
                       <ChevronRight className="size-4" />
                     </Button>
@@ -4050,10 +4046,10 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   {/* Logout everywhere */}
                   <div className="flex items-center gap-12">
                     <div className="flex-1 min-w-0 flex flex-col gap-1">
-                      <div className="text-[16px] font-semibold leading-6 text-white">Logout everywhere</div>
-                      <div className="text-[12px] leading-4 text-gray-dark-200">If you notice any suspicious activity, log out from all devices and browsers.</div>
+                      <div className="text-sm font-medium text-white">Logout everywhere</div>
+                      <div className="text-xs leading-4 text-gray-dark-200">If you notice any suspicious activity, log out from all devices and browsers.</div>
                     </div>
-                    <Button variant="outline" size="sm" className="shrink-0 h-8 pl-3 pr-2 rounded-lg gap-1 text-[14px]">
+                    <Button variant="outline" size="sm" className="shrink-0 h-8 pl-3 pr-2 rounded-lg gap-1 text-sm">
                       Logout
                       <ChevronRight className="size-4" />
                     </Button>
@@ -4064,8 +4060,8 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   {/* 2FA toggle */}
                   <div className="flex items-center gap-12">
                     <div className="flex-1 min-w-0 flex flex-col gap-1">
-                      <div className="text-[16px] font-semibold leading-6 text-white">2-factor authentication</div>
-                      <div className="text-[12px] leading-4 text-gray-dark-200">Status: {twoFaOn ? "On" : "Off"}</div>
+                      <div className="text-sm font-medium text-white">2-factor authentication</div>
+                      <div className="text-xs leading-4 text-gray-dark-200">Status: {twoFaOn ? "On" : "Off"}</div>
                     </div>
                     <Switch
                       checked={twoFaOn}
