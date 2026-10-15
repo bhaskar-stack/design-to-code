@@ -3479,10 +3479,13 @@ function PdfPreviewPanel({ year }: { year: string }) {
             <TabsTrigger value="docs" className={slidingTrigger}>Other documents</TabsTrigger>
           </SlidingTabsList>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="shrink-0 gap-1 text-sm leading-4 h-7 pl-2 pr-1.5">
-            Download
-            <Download className="size-4" />
-          </Button>
+          {/* Other documents have their own per-file download, so this only applies to the 1040 */}
+          {previewTab === "1040" && (
+            <Button variant="outline" size="sm" className="shrink-0 gap-1 text-sm leading-4 h-7 pl-2 pr-1.5">
+              Download
+              <Download className="size-4" />
+            </Button>
+          )}
         </div>
 
         <TabsContent value="1040" className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-4">
