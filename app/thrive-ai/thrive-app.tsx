@@ -2547,23 +2547,33 @@ function FilingCanvasSection({ section, isOpen, isActive, activeItem, onToggle }
           const pending = section.items.filter(it => !it.confirmed)
           return (
             <div className="border-t border-gray-dark-700 px-3.5 py-3 flex flex-col gap-3 animate-[filing-accordion-open_0.45s_cubic-bezier(0.2,0.8,0.2,1)]">
-              {confirmed.map((item, idx) => (
-                <div key={item.id} className="flex items-center gap-2 animate-[filing-item-slide-in_0.4s_cubic-bezier(0.2,0.8,0.2,1)_backwards]" style={{ animationDelay: `${idx * 60}ms` }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" className="shrink-0">
-                    <circle cx="8" cy="8" r="7" fill="none" stroke="var(--brand-400)" strokeWidth="1" />
-                    <path d="M4.5 8.5 L7 11 L11.5 5.5" fill="none" stroke="var(--brand-400)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className={cn("text-sm font-medium", item.na ? "text-gray-dark-400" : "text-white")}>{item.label}</span>
-                  <div className="flex gap-1.5 flex-1 min-w-0 flex-wrap">
+              {confirmed.map((item, idx) => {
+                // More than two tags (e.g. a multi-select answer) wrap onto their own row under the name
+                const stacked = item.tags.length > 2
+                const tags = (
+                  <div className={cn("flex gap-1.5 min-w-0 flex-wrap", stacked ? "pl-6" : "flex-1")}>
                     {item.tags.map((tag, i) => (
                       <span key={tag} className={cn(item.na ? "bg-transparent border border-gray-dark-700 text-gray-dark-400" : "bg-gray-dark-700 text-gray-dark-100", "text-xs font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap animate-[filing-tag-in_0.4s_cubic-bezier(0.2,0.8,0.2,1)_backwards]")} style={{ animationDelay: `${idx * 60 + 100 + i * 60}ms` }}>{tag}</span>
                     ))}
                   </div>
-                  <button className="bg-gray-dark-950 border border-gray-dark-700/50 text-gray-dark-25 text-xs px-1.5 py-0.5 rounded-md shrink-0 cursor-pointer hover:border-brand-400 transition-colors">
-                    edit
-                  </button>
-                </div>
-              ))}
+                )
+                return (
+                  <div key={item.id} className="flex flex-col gap-1.5 animate-[filing-item-slide-in_0.4s_cubic-bezier(0.2,0.8,0.2,1)_backwards]" style={{ animationDelay: `${idx * 60}ms` }}>
+                    <div className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 16 16" className="shrink-0">
+                        <circle cx="8" cy="8" r="7" fill="none" stroke="var(--brand-400)" strokeWidth="1" />
+                        <path d="M4.5 8.5 L7 11 L11.5 5.5" fill="none" stroke="var(--brand-400)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className={cn("text-sm font-medium", item.na ? "text-gray-dark-400" : "text-white", stacked && "flex-1")}>{item.label}</span>
+                      {!stacked && tags}
+                      <button className="bg-gray-dark-950 border border-gray-dark-700/50 text-gray-dark-25 text-xs px-1.5 py-0.5 rounded-md shrink-0 cursor-pointer hover:border-brand-400 transition-colors">
+                        edit
+                      </button>
+                    </div>
+                    {stacked && tags}
+                  </div>
+                )
+              })}
               {pending.map((item, idx) => {
                 const isCurrent = item.id === activeItem && isActive
                 const isExtracting = item.extracting
