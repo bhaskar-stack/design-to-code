@@ -569,10 +569,10 @@ function SidebarUserCard({ setTab, className }: { setTab: (t: string) => void; c
           <button className="relative w-full flex items-center gap-1.5 rounded-lg border border-gray-dark-600 bg-gray-dark-950 p-2 cursor-pointer shadow-[0px_2px_2px_0px_rgba(52,55,72,0.2),0px_0px_0px_1px_rgba(134,140,152,0.2)] after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[inset_2px_4px_3px_0px_rgba(255,255,255,0.08)]">
             <Avatar className="size-5 shrink-0">
               <AvatarFallback className="bg-brand-500/15 text-brand-400 text-[10px] font-semibold">
-                KA
+                BT
               </AvatarFallback>
             </Avatar>
-            <span className="flex-1 text-sm text-white text-left min-w-0 truncate">Kunal Ahuja</span>
+            <span className="flex-1 text-sm text-white text-left min-w-0 truncate">Bhaskar Tiwari</span>
             <UnfoldMore className="size-4 text-muted-foreground shrink-0" />
           </button>
         </DropdownMenuTrigger>
@@ -763,7 +763,7 @@ function MultiSelectCard({ options, onSubmit }: { options: MultiSelectOption[]; 
 }
 
 const EXTRACTION_ROWS = [
-  { label: "Account holder", value: "Kunal Ahuja" },
+  { label: "Account holder", value: "Bhaskar Tiwari" },
   { label: "Account number", value: "••••3847", mono: true },
   { label: "Tax year", value: "2024", mono: true },
   { label: "Ordinary dividends", value: "$8,240.00", mono: true },
@@ -1377,7 +1377,7 @@ function HomeTab({
     <>
       <div>
         <h1 className="text-[28px] leading-10 font-medium m-0 mt-6 tracking-tight text-foreground">
-          Welcome back, Kunal.
+          Welcome back, Bhaskar.
         </h1>
       </div>
 
@@ -2494,7 +2494,7 @@ type FilingScriptStep = {
 }
 
 const FILING_SCRIPT: FilingScriptStep[] = [
-  { role: "assistant", text: "Welcome back, Kunal. I'll prepare your 2026 return. We'll walk through your profile, income, documents, foreign accounts, deductions, and planning checks — then I'll prepare the draft.\n\nYou can edit anything we confirm at any point.", chips: [{ id: "begin", label: "Let's begin", primary: true }] },
+  { role: "assistant", text: "Welcome back, Bhaskar. I'll prepare your 2026 return. We'll walk through your profile, income, documents, foreign accounts, deductions, and planning checks — then I'll prepare the draft.\n\nYou can edit anything we confirm at any point.", chips: [{ id: "begin", label: "Let's begin", primary: true }] },
   { role: "user", text: "Let's begin", advance: { activeSection: "profile", activeItem: "filing_status", openSection: "profile" } },
 
   { role: "assistant", text: "I have you filing jointly with your spouse, same as last year. Still MFJ for 2026?", chips: [{ id: "mfj", label: "Yes, married filing jointly", primary: true }, { id: "changed", label: "Something changed" }] },
@@ -2915,8 +2915,8 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
               </div>
               <div className="flex flex-col gap-3 text-sm text-muted-foreground">
                 <div className="flex justify-between"><span>Filing status</span><span className="text-foreground">Married Filing Jointly</span></div>
-                <div className="flex justify-between"><span>Your first name and middle initial</span><span className="text-foreground">Kunal</span></div>
-                <div className="flex justify-between"><span>Last name</span><span className="text-foreground">Ahuja</span></div>
+                <div className="flex justify-between"><span>Your first name and middle initial</span><span className="text-foreground">Bhaskar</span></div>
+                <div className="flex justify-between"><span>Last name</span><span className="text-foreground">Tiwari</span></div>
                 <div className="flex justify-between"><span>Home address</span><span className="text-foreground">1458 Lake Shore Drive, Apt 10B</span></div>
                 <div className="flex justify-between"><span>City, state, and ZIP</span><span className="text-foreground">New York, NY 10023</span></div>
               </div>
@@ -3044,8 +3044,8 @@ function ProfileConfirmationForm({ onConfirm }: { onConfirm?: () => void }) {
     onConfirm?.()
   }
   const [form, setForm] = useState({
-    firstName: "Kunal", lastName: "Ahuja",
-    email: "kunalahuja@gmail.com", countryCode: "+1", phone: "469-032-5673",
+    firstName: "Bhaskar", lastName: "Tiwari",
+    email: "bhaskartiwari@gmail.com", countryCode: "+1", phone: "469-032-5673",
     maritalStatus: "Married",
     address: "1458 Lake Shore Drive", apt: "Apt 10B",
     country: "United States", state: "New York",
@@ -3378,7 +3378,7 @@ type Quarter = {
 
 function AdvanceTaxPayments() {
   const [msgs, setMsgs] = useState<ChatMessage[]>([
-    { role: "assistant", body: "Hi Kunal — let's talk about your 2026 estimated payments.\n\nBased on your projected income, you owe about $81,824 across the year, split into four quarterly payments of $20,456." },
+    { role: "assistant", body: "Hi Bhaskar — let's talk about your 2026 estimated payments.\n\nBased on your projected income, you owe about $81,824 across the year, split into four quarterly payments of $20,456." },
     { role: "assistant", body: "Q1 was due Apr 15. Did you make the federal ($14,531) and CA ($5,925) payments? I can record them once you confirm." },
   ])
 
@@ -3728,7 +3728,7 @@ const DOCUMENTS_HUB = [
   { name: "Fidelity_RSU_2026.pdf", desc: "RSU vest statements", year: "2026", irsType: "Statements", status: "queued" },
   { name: "DAF_contributions_2026.pdf", desc: "Donor-Advised Fund letter", year: "2026", irsType: "Receipts", status: "queued" },
   { name: "Form_1040_2025.pdf", desc: "Filed return", year: "2025", irsType: "Forms", status: "received" },
-  { name: "W2_2025_Kunal.pdf", desc: "Wages from Tech Corp", year: "2025", irsType: "Forms", status: "received" },
+  { name: "W2_2025_Bhaskar.pdf", desc: "Wages from Tech Corp", year: "2025", irsType: "Forms", status: "received" },
   { name: "W2_2025_Spouse.pdf", desc: "Spouse W-2", year: "2025", irsType: "Forms", status: "received" },
   { name: "1098_Mortgage_2025.pdf", desc: "Mortgage interest paid", year: "2025", irsType: "Forms", status: "received" },
   { name: "Form_8879_2025.pdf", desc: "E-file authorization", year: "2025", irsType: "Forms", status: "received" },
@@ -4200,7 +4200,7 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                   <div className="flex items-center gap-12">
                     <div className="flex-1 min-w-0 flex flex-col gap-1">
                       <div className="text-[16px] font-semibold leading-6 text-white">Email</div>
-                      <div className="text-[12px] leading-4 text-gray-dark-200">kunalahuja@gmail.com</div>
+                      <div className="text-[12px] leading-4 text-gray-dark-200">bhaskartiwari@gmail.com</div>
                     </div>
                     <Button variant="outline" size="sm" className="shrink-0 h-8 pl-3 pr-2 rounded-lg gap-1 text-[14px]">
                       Change email

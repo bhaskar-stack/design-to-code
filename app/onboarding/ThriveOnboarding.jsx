@@ -316,7 +316,7 @@ const UploadScreen = ({ onAdvance, simulateProtected }) => {
 
   const handleSimulatedUpload = () => {
     if (uploadState !== 'idle') return;
-    setFilename('Kunal_Ahuja_2023_Form1040.pdf');
+    setFilename('Bhaskar_Tiwari_2023_Form1040.pdf');
     setUploadState('checking');
   };
 
@@ -392,7 +392,7 @@ const UploadScreen = ({ onAdvance, simulateProtected }) => {
             maxWidth: 480,
             animation: 'greeting-in 0.5s ease 0.1s backwards',
           }}>
-            Hey Kunal, we're analyzing your return. Give us few seconds to crack the code.
+            Hey Bhaskar, we're analyzing your return. Give us few seconds to crack the code.
           </div>
         )}
 
