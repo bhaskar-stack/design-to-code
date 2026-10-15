@@ -154,9 +154,9 @@ function getFileIconType(filename: string): FileIconType {
 // so drop TabsTrigger's own active background and stroke
 const slidingTrigger = "z-[1] data-active:bg-transparent data-active:shadow-none group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent"
 
-// Left nav on Planning, Filing and Documents. 7px top padding (plus each row's 6px
-// margin) centers the first 36px row on the 28px panel title beside it.
-const sideNavList = "w-[220px] shrink-0 pt-[7px] [&_svg]:hidden"
+// Left nav on Planning, Filing and Documents. 4px top padding (plus each row's 6px
+// margin) centers the first 36px row on the 22px panel title beside it.
+const sideNavList = "w-[220px] shrink-0 pt-1 [&_svg]:hidden"
 
 function SlidingTabsList({ value, children, className }: { value: string; children: React.ReactNode; className?: string }) {
   const listRef = useRef<HTMLDivElement>(null)
@@ -908,7 +908,7 @@ function ChatSurface({ context, messages, chips, onChip, header, sub, onClose, p
           ) : context ? (
             <Eyebrow>{context}</Eyebrow>
           ) : null}
-          <div className={cn("text-sm font-medium leading-7 text-foreground", context || backLink ? "mt-1" : "")}>{header}</div>
+          <div className={cn("text-sm font-medium leading-[22px] text-foreground", context || backLink ? "mt-1" : "")}>{header}</div>
           {sub && <div className="text-sm text-muted-foreground mt-1">{sub}</div>}
         </div>
         {onClose && (
@@ -1707,7 +1707,7 @@ function HomeChatStream({ messages, title, onClose, hasHistory, onToggleHistory 
             <X className="size-4 text-white" />
           </button>
         </div>
-        <div className="text-sm font-medium leading-7 text-white">
+        <div className="text-sm font-medium leading-[22px] text-white">
           {title || "New chat"}
         </div>
       </div>
@@ -2205,7 +2205,7 @@ function TaxPlanView({ states, setStates }: {
       <div className="flex flex-col h-full overflow-hidden min-w-0">
         <div className="pl-4 pr-3 pt-4 shrink-0">
           <div className="mb-8">
-            <div className="text-sm font-medium leading-7 text-foreground mb-5">2026 tax plan</div>
+            <div className="text-sm font-medium leading-[22px] text-foreground mb-5">2026 tax plan</div>
             <PlanningTaxPlanCard
               total={inPlanTotal}
               count={inPlanCount}
@@ -2307,7 +2307,7 @@ function W4EstimatorView() {
       <div className="flex flex-col h-full overflow-hidden min-w-0">
         <div className="pl-4 pr-3 pt-4 shrink-0">
           <div className="mb-6">
-            <div className="text-sm font-medium leading-7 text-foreground mb-1">Withholding simulator</div>
+            <div className="text-sm font-medium leading-[22px] text-foreground mb-1">Withholding simulator</div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Your RSU vests withhold at a flat 22%. Your real marginal rate is closer
               to 37%. The IRS expects the difference in April — simulate it now.
@@ -2710,8 +2710,8 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
           to { opacity: 1; transform: translateX(0); }
         }
       `}</style>
-      <div className="px-4 pt-4 pb-4 flex items-center gap-3 shrink-0">
-        <span className="text-sm font-medium leading-7 text-white shrink-0">{isComplete ? "Overview" : "Building your return"}</span>
+      <div className="box-content h-[22px] px-4 pt-4 pb-4 flex items-center gap-3 shrink-0">
+        <span className="text-sm font-medium leading-[22px] text-white shrink-0">{isComplete ? "Overview" : "Building your return"}</span>
         {isComplete && (
           <Tabs value={canvasTab} onValueChange={setCanvasTab}>
             <SlidingTabsList value={canvasTab} className="gap-0.5 -my-0.5">
@@ -3287,7 +3287,7 @@ function AdvanceTaxCanvas({ quarters, onConfirmInChat }: {
   return (
     <div className="flex-[0_1_560px] border-l border-border bg-gray-dark-950 p-4 overflow-y-auto flex flex-col gap-4">
       <div className="flex items-baseline gap-2">
-        <span className="text-sm font-medium leading-7 text-foreground">Estimated payments</span>
+        <span className="text-sm font-medium leading-[22px] text-foreground">Estimated payments</span>
         <span className="text-sm text-muted-foreground">·</span>
         <span className="text-sm text-muted-foreground tabular-nums">
           ${totalEstimate.toLocaleString()} total
@@ -3472,8 +3472,8 @@ function PdfPreviewPanel({ year }: { year: string }) {
   return (
     <div className="flex-[0_1_560px] border-l border-border bg-gray-dark-950 overflow-y-auto flex flex-col">
       <Tabs value={previewTab} onValueChange={setPreviewTab} className="flex flex-col h-full gap-0">
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 shrink-0">
-          <div className="text-sm font-medium leading-7 text-foreground shrink-0">Preview</div>
+        <div className="box-content h-[22px] flex items-center gap-3 px-4 pt-4 pb-3 shrink-0">
+          <div className="text-sm font-medium leading-[22px] text-foreground shrink-0">Preview</div>
           <SlidingTabsList value={previewTab} className="gap-0.5 -my-0.5">
             <TabsTrigger value="1040" className={slidingTrigger}>1040 PDF</TabsTrigger>
             <TabsTrigger value="docs" className={slidingTrigger}>Other documents</TabsTrigger>
@@ -3652,7 +3652,7 @@ function DocumentsHub({ activeYear, setActiveYear }: { activeYear: string; setAc
       <div className="docs-content flex h-full overflow-hidden min-w-0 flex-1 rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900">
         <div className="flex flex-col h-full overflow-hidden min-w-0 flex-1">
           <div className="px-4 pt-4 shrink-0">
-            <h1 className="text-sm font-medium leading-7 m-0 mb-6 text-foreground">
+            <h1 className="text-sm font-medium leading-[22px] m-0 mb-6 text-foreground">
               {activeYear} documents
             </h1>
 
@@ -3859,7 +3859,7 @@ function NotificationPanel({ open, onClose }: { open: boolean; onClose: () => vo
 
         {/* Header */}
         <div className="flex items-start gap-2">
-          <span className="text-sm font-medium leading-7 text-white">Notifications</span>
+          <span className="text-sm font-medium leading-[22px] text-white">Notifications</span>
           <div className="flex items-center gap-1 rounded-3xl">
             <span className="relative size-4 grid place-items-center">
               <span className="absolute size-2 rounded-full bg-[#f04438]" />
@@ -3961,7 +3961,7 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
           {/* Right content area */}
           <div className="flex-1 flex flex-col min-w-0 pt-[15px] pl-[16px] pr-[15px]">
             {/* Tab title */}
-            <div className="text-sm font-medium leading-7 text-white mb-5">
+            <div className="text-sm font-medium leading-[22px] text-white mb-5">
               {profileTab === "personal" && "Profile information"}
               {profileTab === "tax" && "Tax profile"}
               {profileTab === "security" && "Profile security"}
