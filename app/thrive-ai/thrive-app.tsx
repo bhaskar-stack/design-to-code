@@ -154,9 +154,9 @@ function getFileIconType(filename: string): FileIconType {
 // so drop TabsTrigger's own active background and stroke
 const slidingTrigger = "z-[1] data-active:bg-transparent data-active:shadow-none group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:border-transparent dark:data-active:bg-transparent"
 
-// Left nav on Planning, Filing and Documents. 14px top padding centers the first
-// 32px row on the 28px panel title beside it (panel content starts 17px down).
-const sideNavList = "w-[220px] shrink-0 pt-[14px] [&_svg]:hidden"
+// Left nav on Planning, Filing and Documents. 7px top padding (plus each row's 6px
+// margin) centers the first 36px row on the 28px panel title beside it.
+const sideNavList = "w-[220px] shrink-0 pt-[7px] [&_svg]:hidden"
 
 function SlidingTabsList({ value, children, className }: { value: string; children: React.ReactNode; className?: string }) {
   const listRef = useRef<HTMLDivElement>(null)
