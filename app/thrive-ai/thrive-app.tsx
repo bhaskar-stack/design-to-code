@@ -844,12 +844,12 @@ function ExtractionTable({ onConfirm }: { onConfirm: () => void }) {
   )
 }
 
-function ChatSurface({ context, messages, chips, onChip, header, sub, onClose, placeholder, flush, backLink, smallHeader, onFormConfirm, onTypingComplete, onUpload, onConfirmExtraction, onMultiSelect }: {
+function ChatSurface({ context, messages, chips, onChip, header, sub, onClose, placeholder, flush, backLink, onFormConfirm, onTypingComplete, onUpload, onConfirmExtraction, onMultiSelect }: {
   context?: string; messages: ChatMessage[]; chips?: ChipAction[]
   onChip?: (c: ChipAction) => void; header?: string; sub?: string
   onClose?: (() => void) | null; placeholder?: string; flush?: boolean
   backLink?: { label: string; onClick: () => void } | null
-  smallHeader?: boolean; onFormConfirm?: () => void; onTypingComplete?: () => void
+  onFormConfirm?: () => void; onTypingComplete?: () => void
   onUpload?: () => void; onConfirmExtraction?: () => void
   onMultiSelect?: (selected: string[]) => void
 }) {
@@ -890,7 +890,7 @@ function ChatSurface({ context, messages, chips, onChip, header, sub, onClose, p
           ) : context ? (
             <Eyebrow>{context}</Eyebrow>
           ) : null}
-          <div className={cn("font-medium text-foreground", smallHeader ? "text-base" : "text-lg", context || backLink ? "mt-1" : "")}>{header}</div>
+          <div className={cn("text-sm font-medium leading-7 text-foreground", context || backLink ? "mt-1" : "")}>{header}</div>
           {sub && <div className="text-sm text-muted-foreground mt-1">{sub}</div>}
         </div>
         {onClose && (
@@ -1690,7 +1690,7 @@ function HomeChatStream({ messages, title, onClose, hasHistory, onToggleHistory 
             <X className="size-4 text-white" />
           </button>
         </div>
-        <div className="text-base font-medium text-white">
+        <div className="text-sm font-medium leading-7 text-white">
           {title || "New chat"}
         </div>
       </div>
@@ -2188,7 +2188,7 @@ function TaxPlanView({ states, setStates }: {
       <div className="flex flex-col h-full overflow-hidden min-w-0">
         <div className="pl-4 pr-3 pt-4 shrink-0">
           <div className="mb-8">
-            <div className="text-lg font-medium text-foreground mb-5">2026 tax plan</div>
+            <div className="text-sm font-medium leading-7 text-foreground mb-5">2026 tax plan</div>
             <PlanningTaxPlanCard
               total={inPlanTotal}
               count={inPlanCount}
@@ -2252,7 +2252,6 @@ function TaxPlanView({ states, setStates }: {
           onChip={onChip}
           onClose={selected ? () => setSelectedId(null) : null}
           placeholder={selected ? "Ask about this strategy…" : "Ask about tax planning…"}
-          smallHeader
         />
       </div>
     </div>
@@ -2291,7 +2290,7 @@ function W4EstimatorView() {
       <div className="flex flex-col h-full overflow-hidden min-w-0">
         <div className="pl-4 pr-3 pt-4 shrink-0">
           <div className="mb-6">
-            <div className="text-lg font-medium text-foreground mb-1">Withholding simulator</div>
+            <div className="text-sm font-medium leading-7 text-foreground mb-1">Withholding simulator</div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Your RSU vests withhold at a flat 22%. Your real marginal rate is closer
               to 37%. The IRS expects the difference in April — simulate it now.
@@ -2695,10 +2694,10 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
         }
       `}</style>
       <div className="px-4 pt-4 pb-4 flex items-center gap-3 shrink-0">
-        <span className="text-lg font-medium text-white shrink-0">{isComplete ? "Overview" : "Building your return"}</span>
+        <span className="text-sm font-medium leading-7 text-white shrink-0">{isComplete ? "Overview" : "Building your return"}</span>
         {isComplete && (
           <Tabs value={canvasTab} onValueChange={setCanvasTab}>
-            <SlidingTabsList value={canvasTab} className="gap-0.5">
+            <SlidingTabsList value={canvasTab} className="gap-0.5 -my-0.5">
               <TabsTrigger value="profile" className={slidingTrigger}>Profile</TabsTrigger>
               <TabsTrigger value="summary" className={slidingTrigger}>Summary</TabsTrigger>
               <TabsTrigger value="draft" className={slidingTrigger}>Draft PDF</TabsTrigger>
@@ -3270,9 +3269,9 @@ function AdvanceTaxCanvas({ quarters, onConfirmInChat }: {
   return (
     <div className="flex-[0_1_560px] border-l border-border bg-gray-dark-950 p-4 overflow-y-auto flex flex-col gap-4">
       <div className="flex items-baseline gap-2">
-        <span className="text-lg font-medium text-foreground">Estimated payments</span>
-        <span className="text-base text-muted-foreground">·</span>
-        <span className="text-base font-medium text-gray-dark-200 tabular-nums">
+        <span className="text-sm font-medium leading-7 text-foreground">Estimated payments</span>
+        <span className="text-sm text-muted-foreground">·</span>
+        <span className="text-sm text-muted-foreground tabular-nums">
           ${totalEstimate.toLocaleString()} total
         </span>
       </div>
@@ -3456,8 +3455,8 @@ function PdfPreviewPanel({ year }: { year: string }) {
     <div className="flex-[0_1_560px] border-l border-border bg-gray-dark-950 overflow-y-auto flex flex-col">
       <Tabs value={previewTab} onValueChange={setPreviewTab} className="flex flex-col h-full gap-0">
         <div className="flex items-center gap-3 px-4 pt-4 pb-3 shrink-0">
-          <div className="text-lg font-medium text-foreground shrink-0">Preview</div>
-          <SlidingTabsList value={previewTab} className="gap-0.5">
+          <div className="text-sm font-medium leading-7 text-foreground shrink-0">Preview</div>
+          <SlidingTabsList value={previewTab} className="gap-0.5 -my-0.5">
             <TabsTrigger value="1040" className={slidingTrigger}>1040 PDF</TabsTrigger>
             <TabsTrigger value="docs" className={slidingTrigger}>Other documents</TabsTrigger>
           </SlidingTabsList>
@@ -3635,7 +3634,7 @@ function DocumentsHub({ activeYear, setActiveYear }: { activeYear: string; setAc
       <div className="docs-content flex h-full overflow-hidden min-w-0 flex-1 rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900">
         <div className="flex flex-col h-full overflow-hidden min-w-0 flex-1">
           <div className="px-4 pt-4 shrink-0">
-            <h1 className="text-lg font-medium m-0 mb-6 text-foreground">
+            <h1 className="text-sm font-medium leading-7 m-0 mb-6 text-foreground">
               {activeYear} documents
             </h1>
 
@@ -3842,7 +3841,7 @@ function NotificationPanel({ open, onClose }: { open: boolean; onClose: () => vo
 
         {/* Header */}
         <div className="flex items-start gap-2">
-          <span className="text-base font-medium text-white">Notifications</span>
+          <span className="text-sm font-medium leading-7 text-white">Notifications</span>
           <div className="flex items-center gap-1 rounded-3xl">
             <span className="relative size-4 grid place-items-center">
               <span className="absolute size-2 rounded-full bg-[#f04438]" />
@@ -3944,7 +3943,7 @@ function ProfileModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
           {/* Right content area */}
           <div className="flex-1 flex flex-col min-w-0 pt-[15px] pl-[16px] pr-[15px]">
             {/* Tab title */}
-            <div className="text-base font-medium text-white mb-5">
+            <div className="text-sm font-medium leading-7 text-white mb-5">
               {profileTab === "personal" && "Profile information"}
               {profileTab === "tax" && "Tax profile"}
               {profileTab === "security" && "Profile security"}
