@@ -317,6 +317,8 @@ export type FilingOption = {
 export type FilingAction = { reply?: string; set?: Partial<FilingFacts>; effect?: Dyn<FilingEffect>; next: Dyn<string> }
 
 export type FilingNode = {
+  /** What the assistant is doing while it prepares this message, shown in the chat loader */
+  thinking?: Dyn<string>
   /** Section and item the canvas highlights while this question is open */
   focus?: { section: string; item?: string }
   text: Dyn<string>
@@ -363,6 +365,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
 
   // ── profile ──
   status: {
+    thinking: "Checking last year's filing status",
     focus: { section: "profile", item: "filing_status" },
     text: "I have you filing jointly with your spouse, same as last year. Still married filing jointly for 2026?",
     options: [
@@ -372,6 +375,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   status_compare: {
+    thinking: "Comparing joint and separate returns",
     focus: { section: "profile", item: "filing_status" },
     text: (f) => {
       const joint = computeReturn({ ...f, status: "MFJ" })
@@ -384,6 +388,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   status_changed: {
+    thinking: "Updating your profile",
     focus: { section: "profile", item: "filing_status" },
     text: "No problem — what's your filing status for 2026?",
     options: [
@@ -394,6 +399,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   status_mfs: {
+    thinking: "Estimating the cost of filing separately",
     focus: { section: "profile", item: "filing_status" },
     text: (f, r) => {
       const joint = computeReturn({ ...f, status: "MFJ" })
@@ -405,6 +411,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   residency: {
+    thinking: "Checking your address history",
     focus: { section: "profile", item: "residency" },
     text: "California resident the full year, correct?",
     options: [
@@ -414,6 +421,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   residency_when: {
+    thinking: (f) => `Looking up part-year rules for ${f.residency === "TX" ? "Texas" : "New York"}`,
     focus: { section: "profile", item: "residency" },
     text: (f) => `When did you move to ${f.residency === "TX" ? "Texas" : "New York"}? I'll split your income between the two states by date.`,
     options: (f) => {
@@ -427,6 +435,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     },
   },
   dependents: {
+    thinking: "Reviewing your dependents",
     focus: { section: "profile", item: "dependents" },
     text: "Two dependents from last year — same for 2026?",
     options: [
@@ -437,6 +446,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   dependents_aged: {
+    thinking: "Checking dependent credit rules",
     focus: { section: "profile", item: "dependents" },
     text: "Got it. Once a child turns 17 they no longer qualify for the $2,000 child tax credit, but they still count for the $500 credit for other dependents if they live with you and you support them.",
     options: [
@@ -444,6 +454,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   hoh_suggest: {
+    thinking: "Comparing head of household with single",
     focus: { section: "profile", item: "filing_status" },
     text: (f, r) => {
       const hoh = computeReturn({ ...f, status: "HOH" })
@@ -457,6 +468,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
 
   // ── income ──
   employment: {
+    thinking: "Pulling your W-2 from Tech Corp",
     focus: { section: "income", item: "employment" },
     text: "Pulling your W-2 from Tech Corp. Full year there?",
     options: [
@@ -466,6 +478,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   employment_switched: {
+    thinking: "Searching your payroll connections",
     focus: { section: "income", item: "employment" },
     text: "Found a second W-2 from Nimbus Labs in your payroll connections — started there in June. Two employers can over-withhold Social Security tax; I'll claim back anything above the wage base.",
     options: [
@@ -473,6 +486,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   employment_left: {
+    thinking: "Reviewing your final paycheck",
     focus: { section: "income", item: "employment" },
     text: "Thanks. Did you receive severance or a final RSU vest when you left? Those show up on the same W-2, so nothing extra to upload — I just want to make sure withholding covered them.",
     options: [
@@ -481,11 +495,13 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   employment_left_check: {
+    thinking: "Checking your final W-2",
     focus: { section: "income", item: "employment" },
     text: "Checked — your final W-2 includes a $14,200 severance payment with 22% federal withholding. You're covered.",
     options: [{ id: "ok", label: "Great, continue", next: "self_employment" }],
   },
   self_employment: {
+    thinking: "Looking for 1099-NEC forms",
     focus: { section: "income", item: "self_employment" },
     text: "I see two 1099-NEC forms — freelance work for two clients. Include them?",
     options: [
@@ -496,6 +512,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   stocks: {
+    thinking: "Loading your Fidelity 1099s",
     focus: { section: "income", item: "stocks" },
     text: "Your Fidelity 1099-DIV and 1099-B are loaded. I'll handle the cost basis adjustment in the planning section.",
     options: [
@@ -506,16 +523,19 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   stocks_more: {
+    thinking: "Pulling up how RSU cost basis works",
     focus: { section: "income", item: "stocks" },
     text: "Brokers often report RSU shares with a $0 or partial cost basis because the vest value was already taxed on your W-2. If we used their numbers you'd pay tax on that income twice. I'll match each sale to your vest records and fix the basis before it hits Form 8949.",
     options: reask("stocks"),
   },
   stocks_schwab: {
+    thinking: "Connecting to Schwab",
     focus: { section: "income", item: "stocks" },
     text: "Connected to Schwab — pulled a 1099 composite with $1,920 in dividends and $860 in short-term gains. I've added it to your documents.",
     options: [{ id: "ok", label: "Perfect, continue", next: "crypto" }],
   },
   crypto: {
+    thinking: "Checking your crypto accounts",
     focus: { section: "income", item: "crypto" },
     text: "Found Coinbase activity from last year. Pull this year's transactions the same way?",
     options: [
@@ -525,11 +545,13 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   crypto_kraken: {
+    thinking: "Linking your Kraken account",
     focus: { section: "income", item: "crypto" },
     text: "Linked Kraken — 38 trades, $1,320 in net gains. I'll reconcile transfers between the two exchanges so coins you moved aren't counted as sales.",
     options: [{ id: "ok", label: "Sounds good", next: "rental" }],
   },
   rental: {
+    thinking: "Looking up your rental property",
     focus: { section: "income", item: "rental" },
     text: "Rental property in Austin, TX — same as last year?",
     options: [
@@ -539,6 +561,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   rental_sold: {
+    thinking: "Finding your closing statement",
     focus: { section: "income", item: "rental" },
     text: "Got it — I found the closing statement in your email: sold in September with a $41,200 long-term gain. I'll recapture depreciation on Form 4797 and include the partial-year rent.",
     options: [{ id: "ok", label: "That's right", next: "documents" }],
@@ -546,6 +569,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
 
   // ── documents ──
   documents: {
+    thinking: (f) => f.brokerage === "none" ? "Importing your documents" : "Importing documents from your accounts",
     focus: { section: "documents" },
     effect: { syncDocs: true, importDocs: true },
     text: (f) => {
@@ -561,17 +585,20 @@ export const FILING_NODES: Record<string, FilingNode> = {
     onUpload: { reply: "Here's the year-end statement", set: { statement: "extracted" }, effect: { extracting: UPLOAD_DOCS }, next: "extracting" },
   },
   documents_skipped: {
+    thinking: "Switching to your 1099 data",
     focus: { section: "documents" },
     text: "No problem — I'll use the 1099 figures. The year-end statement mostly helps catch mismatched basis, so I've flagged the RSU sales for a closer look in planning.",
     options: [{ id: "ok", label: "Continue", next: "hdfc" }],
   },
   extracting: {
+    thinking: "Opening Fidelity_YE_2024.pdf",
     focus: { section: "documents" },
     text: "Reading the statement…",
     ui: "extracting",
     auto: { after: 12000, next: "extracted" },
   },
   extracted: {
+    thinking: "Summarizing what I found",
     focus: { section: "documents" },
     text: "Got it. Here's what I pulled from the statement. Confirm everything looks right and I'll move on.",
     ui: "extractionTable",
@@ -580,6 +607,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
 
   // ── foreign ──
   hdfc: {
+    thinking: "Checking your HDFC Bank balances",
     focus: { section: "foreign", item: "hdfc" },
     text: "Your HDFC Bank account peaked at $8,420 this year. Confirm?",
     options: [
@@ -589,6 +617,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   hdfc_peak: {
+    thinking: "Reviewing FBAR reporting rules",
     focus: { section: "foreign", item: "hdfc" },
     text: "FBAR uses the highest balance during the year, not the year-end figure. What was the peak?",
     options: [
@@ -598,11 +627,13 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   hdfc_estimated: {
+    thinking: "Scanning your HDFC statements",
     focus: { section: "foreign", item: "hdfc" },
     text: "From your monthly statements the highest was about $10,950 in March. I'll use that — it's fine to report a reasonable estimate.",
     options: [{ id: "ok", label: "Use that", next: "icici" }],
   },
   icici: {
+    thinking: "Checking your ICICI Bank balances",
     focus: { section: "foreign", item: "icici" },
     text: "ICICI Bank peaked at $5,860. Confirm?",
     options: [
@@ -612,6 +643,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   foreign_other: {
+    thinking: "Adding up your foreign balances",
     focus: { section: "foreign", item: "other_foreign" },
     text: (f, r) => `Combined peak so far is ${usd(r.foreignPeak)}${r.fbarRequired ? " — over the $10,000 threshold, so you'll need to file an FBAR." : " — under the $10,000 FBAR threshold."} Any other foreign accounts or investments?`,
     options: [
@@ -621,6 +653,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   foreign_other_more: {
+    thinking: "Updating your foreign account total",
     focus: { section: "foreign", item: "other_foreign" },
     text: (f, r) => `Added. Combined peak is now ${usd(r.foreignPeak)}${r.fbarRequired ? ", so FBAR is required" : ""}${f.pfic ? ". The mutual funds count as PFICs — we'll choose how to report them in planning" : ""}. Anything else?`,
     options: (f) => [
@@ -630,6 +663,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   foreign_summary: {
+    thinking: "Checking FBAR and Form 8938 thresholds",
     focus: { section: "foreign", item: "other_foreign" },
     text: (f, r) => `${r.fbarRequired ? "I'll prepare your FBAR (FinCEN 114) — it's filed separately from your return, due the same day." : "No FBAR needed this year."} Form 8938 isn't required — you're well under the ${f.status === "MFJ" ? "$100,000 threshold for joint filers" : "$50,000 threshold"} living in the US.`,
     options: [{ id: "ok", label: "Got it", next: "expenses" }],
@@ -637,6 +671,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
 
   // ── deductions ──
   expenses: {
+    thinking: "Preparing a few deduction questions",
     focus: { section: "deductions", item: "expenses" },
     text: "Before we settle your deductions, let me ask broadly — did you spend money on any of these this year? Tap each one that applies.",
     ui: "multiSelect",
@@ -668,6 +703,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     skip: { when: () => true, tags: ["none this year"], next: "itemize" },
   },
   charity: {
+    thinking: "Matching your donation records",
     focus: { section: "deductions", item: "charitable" },
     text: (f) => [
       f.expenses.includes("charity_cash") ? "I have $4,800 in cash donations from your bank and DAF records." : null,
@@ -683,6 +719,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
       : [{ id: "yes", label: "Yes, $1,400 in goods", effect: confirm("deductions", "charitable", "$1,400 goods", "Form 8283"), next: "itemize" }],
   },
   charity_receipts: {
+    thinking: "Checking your donation receipts",
     focus: { section: "deductions", item: "charitable" },
     text: "Updated to $6,200. Any single gift of $250 or more needs a written acknowledgment from the charity — I found receipts for all but one $1,400 donation. Want to add it?",
     options: [
@@ -691,11 +728,13 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   charity_found: {
+    thinking: "Searching your email for the receipt",
     focus: { section: "deductions", item: "charitable" },
     text: "Found it — Bay Area Food Bank, $1,400, March 2026. All your donations are documented now.",
     options: [{ id: "ok", label: "Thanks", next: "itemize" }],
   },
   itemize: {
+    thinking: "Comparing standard and itemized deductions",
     focus: { section: "deductions", item: "standard_vs_itemized" },
     text: (f, r) => {
       const parts = [
@@ -718,6 +757,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     },
   },
   itemize_lower: {
+    thinking: "Calculating the difference",
     focus: { section: "deductions", item: "standard_vs_itemized" },
     text: (f, r) => {
       const other = computeReturn({ ...f, deduction: r.recommended })
@@ -729,6 +769,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   retirement: {
+    thinking: "Reviewing your retirement contributions",
     focus: { section: "deductions", item: "retirement" },
     text: (f, r) => r.rothOverLimit
       ? "Your W-2 shows $23,000 to your 401(k) — maxed. I also see $7,000 into a Roth IRA, but your income is above the Roth limit, so a direct contribution would be an excess contribution (6% penalty each year).\n\nHow was the Roth funded?"
@@ -745,6 +786,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
       ],
   },
   retirement_rechar: {
+    thinking: "Preparing Form 8606",
     focus: { section: "deductions", item: "retirement" },
     text: "I'll note the recharacterization on Form 8606. You'll need to ask your IRA custodian to move the $7,000 plus earnings before the filing deadline — I've added a reminder.",
     options: [{ id: "ok", label: "Will do", next: "rsu" }],
@@ -752,6 +794,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
 
   // ── planning ──
   rsu: {
+    thinking: "Matching RSU sales to vest records",
     focus: { section: "planning", item: "rsu_basis" },
     skip: { when: (f) => f.brokerage === "none", tags: ["no sales this year"], next: "iso" },
     text: (f) => `Your 1099-B under-reports cost basis on 847 RSU shares by $42,103. ${f.statement === "skipped" ? "Without the year-end statement I matched sales to your vest confirmations instead." : "The year-end statement confirms the vest prices."} Adjusting the basis up means you're not taxed twice.`,
@@ -762,11 +805,13 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   rsu_more: {
+    thinking: "Pulling up how RSU basis is taxed",
     focus: { section: "planning", item: "rsu_basis" },
     text: "When RSUs vest, their value is taxed as wages on your W-2 — that becomes your cost basis. Brokers often report $0 basis, so selling looks like pure profit. The adjustment adds the vest value back so only the gain after vesting is taxed.",
     options: reask("rsu"),
   },
   rsu_keep: {
+    thinking: "Estimating the extra tax",
     focus: { section: "planning", item: "rsu_basis" },
     text: (f, r) => {
       const fixed = computeReturn({ ...f, rsuAdjusted: true })
@@ -778,6 +823,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   iso: {
+    thinking: "Checking your ISO exercises",
     focus: { section: "planning", item: "iso_amt" },
     text: "You exercised 1,200 ISOs in Q3 at a $52 strike when they were worth $89 — a $44,400 AMT preference. That puts you $11,840 into AMT. You'll pay it this year and get it back as a credit in later years.",
     options: [
@@ -788,16 +834,19 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   iso_more: {
+    thinking: "Pulling up how AMT works",
     focus: { section: "planning", item: "iso_amt" },
     text: "Exercising ISOs isn't taxed under regular rules, but the spread between strike and market value counts for the alternative minimum tax. If the AMT is higher than your regular tax, you pay the difference — then claim it back as a credit (Form 8801) in years when you're not in AMT.",
     options: reask("iso"),
   },
   iso_sold: {
+    thinking: "Checking disqualifying disposition rules",
     focus: { section: "planning", item: "iso_amt" },
     text: "Then it's a disqualifying disposition — no AMT, but the $44,400 spread is taxed as ordinary income. Tech Corp should have added it to your W-2; I'll make sure it isn't counted twice.",
     options: [{ id: "ok", label: "Got it", effect: confirm("planning", "iso_amt", "disqualifying", "+$44,400 income"), next: "pfic" }],
   },
   pfic: {
+    thinking: "Reviewing your Indian mutual funds",
     focus: { section: "planning", item: "pfic" },
     skip: { when: (f) => !f.pfic, tags: [], next: "state" },
     text: "Your Indian mutual funds are PFICs. Mark-to-market taxes the yearly gain as ordinary income ($2,300 this year) but keeps things simple. The default method defers tax until you sell, then adds an interest charge. The election is hard to undo.",
@@ -808,6 +857,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   state: {
+    thinking: (f) => ({ CA: "Preparing your California return", TX: "Checking part-year rules for California", NY: "Splitting income between California and New York" })[f.residency],
     focus: { section: "planning", item: "state_tax" },
     text: (f) => ({
       CA: "Running your California return alongside the federal. Standard CA conformity rules apply.",
@@ -820,6 +870,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   state_more: {
+    thinking: "Pulling up state tax rules",
     focus: { section: "planning", item: "state_tax" },
     text: (f) => f.residency === "CA"
       ? "California taxes capital gains as ordinary income and doesn't allow the federal SALT deduction for state income tax, so your CA return uses its own itemized total. I'll carry everything across from the federal return."
@@ -829,11 +880,13 @@ export const FILING_NODES: Record<string, FilingNode> = {
 
   // ── draft & filing ──
   draft: {
+    thinking: "Assembling your return",
     focus: { section: "draft" },
     text: "Got everything I need. Preparing your draft return now — you'll see the progress on the right.",
     auto: { after: 5000, next: "ready" },
   },
   ready: {
+    thinking: "Running final calculations",
     focus: { section: "draft" },
     text: (f, r) => {
       const line = (label: string, n: number) => `${label} ${n >= 0 ? "refund" : "balance due"}: ${usd(n)}`
@@ -850,6 +903,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   after_summary: {
+    thinking: "Opening the summary",
     text: (f, r) => `The summary is on the right — ${usd(r.totalIncome)} in income, ${usd(r.deduction + r.adjustments)} in deductions, and ${usd(r.credits)} in credits.`,
     options: [
       { id: "file", label: "Review and file", next: "efile" },
@@ -857,6 +911,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   after_draft: {
+    thinking: "Opening your draft 1040",
     text: "Here's your draft Form 1040. Every line ties back to what we confirmed.",
     options: [
       { id: "file", label: "Review and file", next: "efile" },
@@ -864,6 +919,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   efile: {
+    thinking: "Preparing your e-file package",
     text: (f, r) => `I'll e-file your ${r.hasNY ? "federal, California and New York" : "federal and California"} returns together${r.fbarRequired ? ", plus your FBAR with FinCEN" : ""}. Sign Form 8879 to authorize the submission.${r.totalBack < 0 ? `\n\nYou'll owe ${usd(-r.totalBack)} in total — I'll schedule it from your checking account for April 15.` : ""}`,
     options: [
       { id: "sign", label: "Sign and e-file", next: "filed" },
@@ -871,6 +927,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   not_yet: {
+    thinking: "Saving your draft",
     text: "No rush — your draft is saved. You have until April 15, and I'll remind you a week before.",
     options: [
       { id: "file", label: "File now after all", next: "efile" },
@@ -878,6 +935,7 @@ export const FILING_NODES: Record<string, FilingNode> = {
     ],
   },
   filed: {
+    thinking: (f, r) => r.hasNY ? "Submitting to the IRS, California and New York" : "Submitting to the IRS and California",
     text: (f, r) => {
       const owed = [r.fedRefund, r.caRefund, r.hasNY ? r.nyRefund : 0].filter(n => n < 0).reduce((sum, n) => sum - n, 0)
       return [

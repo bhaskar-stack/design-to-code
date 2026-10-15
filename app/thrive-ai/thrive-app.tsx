@@ -64,6 +64,7 @@ import {
   FileChartPieIcon,
   AiFileIcon,
   ArtificialIntelligence08Icon,
+  CheckmarkCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import {
   Bell,
@@ -95,7 +96,6 @@ import {
   PanelLeftOpen,
   SecurityLock,
   Calendar,
-  Tick01,
 } from "@/components/icons"
 
 // ── tiny primitives ─────────────────────────────────────────────────────────
@@ -650,45 +650,63 @@ const EXTRACTION_STAGES = [
   "Preparing summary",
 ]
 
-function InChatExtraction() {
+// Tool-call style block: a header that expands to the step list. Open while it runs,
+// then collapses to a one-line summary; clicking the header toggles it.
+function InChatExtraction({ title }: { title: string }) {
   const [activeStage, setActiveStage] = useState(0)
+  const [open, setOpen] = useState(true)
+  const done = activeStage >= EXTRACTION_STAGES.length
 
   useEffect(() => {
+    let stage = 0
     const interval = setInterval(() => {
-      setActiveStage(prev => {
-        if (prev >= EXTRACTION_STAGES.length - 1) { clearInterval(interval); return prev }
-        return prev + 1
-      })
-    }, 2000)
+      stage += 1
+      setActiveStage(stage)
+      if (stage >= EXTRACTION_STAGES.length) {
+        clearInterval(interval)
+        setOpen(false)
+      }
+    }, 1800)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="mt-2 flex flex-col gap-[6px]">
-      {EXTRACTION_STAGES.map((stage, i) => {
-        const isDone = i < activeStage
-        const isActive = i === activeStage
-        if (i > activeStage) return null
-        return (
-          <div
-            key={i}
-            className={cn(
-              "flex items-center gap-2 text-xs animate-[upload-slide-in_0.3s_cubic-bezier(0.2,0.8,0.2,1)_backwards]",
-              isDone ? "text-muted-foreground" : "text-gray-dark-200"
-            )}
-          >
-            {isDone ? (
-              <>
-                <Tick01 className="size-3.5 shrink-0 text-brand-400" />
-                <span>{stage}</span>
-              </>
-            ) : (
-              // The running step's name is the loader's label, so it doesn't repeat the generic one
-              <ThriveLoader message={stage} orbSize={14} />
-            )}
-          </div>
-        )
-      })}
+    <div>
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        className="flex items-center gap-1 bg-transparent border-none p-0 text-left text-sm leading-[22px] text-white cursor-pointer hover:text-gray-dark-200 transition-colors"
+      >
+        <span>{done ? `Read the statement · ${EXTRACTION_STAGES.length} steps` : title}</span>
+        <ChevronRight className={cn("size-4 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-90")} />
+      </button>
+      {open && (
+        <div className="mt-2 flex flex-col gap-[6px] animate-[filing-accordion-open_0.3s_cubic-bezier(0.2,0.8,0.2,1)]">
+          {EXTRACTION_STAGES.map((stage, i) => {
+            const isDone = i < activeStage
+            if (i > activeStage) return null
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-center gap-2 text-xs animate-[upload-slide-in_0.3s_cubic-bezier(0.2,0.8,0.2,1)_backwards]",
+                  isDone ? "text-muted-foreground" : "text-gray-dark-200"
+                )}
+              >
+                {isDone ? (
+                  <>
+                    <HugeiconsIcon icon={CheckmarkCircle01Icon} size={14} strokeWidth={1.5} className="shrink-0 text-brand-400" />
+                    <span>{stage}</span>
+                  </>
+                ) : (
+                  // The running step's name is the loader's label, so it doesn't repeat the generic one
+                  <ThriveLoader message={stage} orbSize={14} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -911,7 +929,7 @@ function ChatSurface({ context, messages, chips, onChip, header, sub, onClose, p
           if (m.role === "thinking") {
             return (
               <div key={i} className="self-start">
-                <ThriveLoader />
+                <ThriveLoader message={m.body || undefined} />
               </div>
             )
           }
@@ -954,9 +972,8 @@ function ChatSurface({ context, messages, chips, onChip, header, sub, onClose, p
                 ? "max-w-[85%] self-end bg-gray-dark-700 px-2 py-1.5 rounded-tl-lg rounded-tr-lg rounded-bl-lg rounded-br-sm"
                 : "max-w-[80%] self-start"
             )}>
-              {shouldType ? <TypewriterText text={m.body} onComplete={isLastMsg ? onTypingComplete : undefined} /> : m.body}
+              {m.runExtraction ? <InChatExtraction title={m.body} /> : shouldType ? <TypewriterText text={m.body} onComplete={isLastMsg ? onTypingComplete : undefined} /> : m.body}
               {m.showUpload && isLastMsg && onUpload && <UploadCard onUpload={onUpload} />}
-              {m.runExtraction && <InChatExtraction />}
               {m.showExtractionTable && <ExtractionTable onConfirm={onConfirmExtraction!} />}
               {m.showMultiSelect && m.multiSelectOptions && (
                 <MultiSelectCard options={m.multiSelectOptions} onSubmit={onMultiSelect!} />
@@ -1700,7 +1717,7 @@ function HomeChatStream({ messages, title, onClose, hasHistory, onToggleHistory 
           if (m.role === "thinking") {
             return (
               <div key={i} className="self-start">
-                <ThriveLoader />
+                <ThriveLoader message={m.body || undefined} />
               </div>
             )
           }
@@ -2991,7 +3008,8 @@ function CurrentReturnFiling() {
   const [awaiting, setAwaiting] = useState<string | null>(null)
   const [facts, setFacts] = useState<FilingFacts>(DEFAULT_FACTS)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [isThinking, setIsThinking] = useState(false)
+  // What the assistant is doing before its next message (null when idle)
+  const [thinking, setThinking] = useState<string | null>(null)
   const [sections, setSections] = useState<FilingSection[]>(INITIAL_FILING_SECTIONS)
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
   const [activeItem, setActiveItem] = useState<string | null>(null)
@@ -3083,9 +3101,9 @@ function CurrentReturnFiling() {
     }
     const ui = resolve(node.ui, facts)
     const timers: ReturnType<typeof setTimeout>[] = []
-    setIsThinking(step.id !== FILING_START)
+    setThinking(step.id === FILING_START ? null : resolve(node.thinking, facts) ?? "")
     timers.push(setTimeout(() => {
-      setIsThinking(false)
+      setThinking(null)
       focusOn(node.focus)
       applyEffect(resolve(node.effect, facts), facts)
       setChatMessages(prev => [...prev, {
@@ -3157,7 +3175,7 @@ function CurrentReturnFiling() {
 
   const isSectionOpen = (id: string) => id === activeSectionId || manualOpen.has(id)
 
-  const thinkingMessages: ChatMessage[] = isThinking ? [...chatMessages, { role: "thinking", body: "" }] : chatMessages
+  const thinkingMessages: ChatMessage[] = thinking !== null ? [...chatMessages, { role: "thinking", body: thinking }] : chatMessages
 
   return (
     <div className="flex w-full h-full overflow-hidden">
