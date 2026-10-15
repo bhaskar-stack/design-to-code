@@ -668,11 +668,14 @@ function InChatExtraction() {
             )}
           >
             {isDone ? (
-              <Tick01 className="size-3.5 shrink-0 text-brand-400" />
+              <>
+                <Tick01 className="size-3.5 shrink-0 text-brand-400" />
+                <span>{stage}</span>
+              </>
             ) : (
-              <ThriveLoader />
+              // The running step's name is the loader's label, so it doesn't repeat the generic one
+              <ThriveLoader message={stage} orbSize={14} />
             )}
-            <span>{stage}</span>
           </div>
         )
       })}
