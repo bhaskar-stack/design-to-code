@@ -4,6 +4,11 @@ import React, { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallba
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { parseThrivePath, thrivePath, defaultSection, type ThriveTab } from "./routes"
+import {
+  FILING_NODES, FILING_START, DEFAULT_FACTS, INITIAL_FILING_SECTIONS, UPLOAD_DOCS,
+  STATUS_LABEL, computeReturn, documentItems, money, resolve,
+  type FilingAction, type FilingEffect, type FilingFacts, type FilingSection, type ReturnResult,
+} from "./filing-scenario"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardAction, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -756,7 +761,7 @@ function MultiSelectCard({ options, onSubmit }: { options: MultiSelectOption[]; 
               {selected.size > 0 ? "Skip" : "None Apply"}
             </button>
             <Button
-              onClick={() => handleSubmit(selected.size > 0 ? options.filter(o => selected.has(o.id)).map(o => o.label) : [])}
+              onClick={() => handleSubmit(options.filter(o => selected.has(o.id)).map(o => o.id))}
               className="bg-brand-600 hover:bg-brand-500 text-white gap-1.5"
             >
               {selected.size > 0 ? `Done · ${selected.size}` : "Confirm"} <ArrowRight className="size-4" />
@@ -2420,236 +2425,35 @@ function SimulatorSlider({ label, value, onChange, min, max, step, hint, accent 
 
 // ── RETURN FILING: Canvas sections & script ────────────────────────────────
 
-type FilingItem = { id: string; label: string; tags: string[]; confirmed: boolean; extracting?: boolean }
-type FilingSection = {
-  id: string; label: string; type: "items" | "progress"
-  items?: FilingItem[]; state?: string; progress?: number
-}
-
-const INITIAL_FILING_SECTIONS: FilingSection[] = [
-  {
-    id: "profile", label: "Your profile information", type: "items",
-    items: [
-      { id: "filing_status", label: "Filing status", tags: [], confirmed: false },
-      { id: "residency", label: "Residency", tags: [], confirmed: false },
-      { id: "dependents", label: "Dependents", tags: [], confirmed: false },
-    ],
-  },
-  {
-    id: "income", label: "Income sources", type: "items",
-    items: [
-      { id: "employment", label: "Employment", tags: [], confirmed: false },
-      { id: "self_employment", label: "Self-employment", tags: [], confirmed: false },
-      { id: "stocks", label: "Stocks & brokerage", tags: [], confirmed: false },
-      { id: "crypto", label: "Crypto", tags: [], confirmed: false },
-      { id: "rental", label: "Rental & real estate", tags: [], confirmed: false },
-    ],
-  },
-  {
-    id: "documents", label: "Documents collection", type: "items",
-    items: [
-      { id: "w2", label: "W-2 · Tech Corp", tags: [], confirmed: false },
-      { id: "1099nec", label: "1099-NEC · Freelance (×2)", tags: [], confirmed: false },
-      { id: "1099div", label: "1099-DIV · Fidelity", tags: [], confirmed: false },
-      { id: "1099b", label: "1099-B · Fidelity", tags: [], confirmed: false },
-      { id: "coinbase", label: "Coinbase transactions", tags: [], confirmed: false },
-      { id: "rental_docs", label: "Rental records", tags: [], confirmed: false },
-    ],
-  },
-  {
-    id: "foreign", label: "Foreign accounts", type: "items",
-    items: [
-      { id: "hdfc", label: "HDFC Bank", tags: [], confirmed: false },
-      { id: "icici", label: "ICICI Bank", tags: [], confirmed: false },
-      { id: "other_foreign", label: "Other accounts", tags: [], confirmed: false },
-    ],
-  },
-  {
-    id: "deductions", label: "Deductions & credits", type: "items",
-    items: [
-      { id: "standard_vs_itemized", label: "Standard vs itemized", tags: [], confirmed: false },
-      { id: "retirement", label: "Retirement contributions", tags: [], confirmed: false },
-      { id: "charitable", label: "Charitable giving", tags: [], confirmed: false },
-    ],
-  },
-  {
-    id: "planning", label: "Tax planning checks", type: "items",
-    items: [
-      { id: "rsu_basis", label: "RSU cost basis", tags: [], confirmed: false },
-      { id: "iso_amt", label: "ISO & AMT exposure", tags: [], confirmed: false },
-      { id: "state_tax", label: "State tax (California)", tags: [], confirmed: false },
-    ],
-  },
-  { id: "draft", label: "Draft return", type: "progress", progress: 0 },
-]
-
-type FilingScriptStep = {
-  role: "assistant" | "user"
-  text: string
-  chips?: { id: string; label: string; primary?: boolean }[]
-  confirm?: { sectionId: string; itemId: string; tags: string[] }
-  confirmDocs?: string[]
-  confirmDocsTag?: string
-  advance?: { activeSection?: string; activeItem?: string; openSection?: string; completeSection?: string }
-  duration?: number
-  runProgress?: boolean
-  showUpload?: boolean
-  triggerExtraction?: boolean
-  runExtraction?: boolean
-  showExtractionTable?: boolean
-  multiSelect?: { options: MultiSelectOption[] }
-  isMultiSelectResponse?: boolean
-}
-
-const FILING_SCRIPT: FilingScriptStep[] = [
-  { role: "assistant", text: "Welcome back, Bhaskar. I'll prepare your 2026 return. We'll walk through your profile, income, documents, foreign accounts, deductions, and planning checks — then I'll prepare the draft.\n\nYou can edit anything we confirm at any point.", chips: [{ id: "begin", label: "Let's begin", primary: true }] },
-  { role: "user", text: "Let's begin", advance: { activeSection: "profile", activeItem: "filing_status", openSection: "profile" } },
-
-  { role: "assistant", text: "I have you filing jointly with your spouse, same as last year. Still MFJ for 2026?", chips: [{ id: "mfj", label: "Yes, married filing jointly", primary: true }, { id: "changed", label: "Something changed" }] },
-  { role: "user", text: "Yes, married filing jointly", confirm: { sectionId: "profile", itemId: "filing_status", tags: ["Married Filing Jointly"] }, advance: { activeItem: "residency" } },
-
-  { role: "assistant", text: "California resident the full year, correct?", chips: [{ id: "ca", label: "Yes, full year CA resident", primary: true }, { id: "changed", label: "Something changed" }] },
-  { role: "user", text: "Yes, full year CA resident", confirm: { sectionId: "profile", itemId: "residency", tags: ["California", "full year"] }, advance: { activeItem: "dependents" } },
-
-  { role: "assistant", text: "Two dependents from last year — same for 2026?", chips: [{ id: "deps", label: "Yes, same two dependents", primary: true }, { id: "changed", label: "Something changed" }] },
-  { role: "user", text: "Yes, same two dependents", confirm: { sectionId: "profile", itemId: "dependents", tags: ["2 dependents"] }, advance: { completeSection: "profile", activeSection: "income", activeItem: "employment", openSection: "income" } },
-
-  { role: "assistant", text: "Pulling your W-2 from Tech Corp. Full year there?", chips: [{ id: "emp", label: "Yes, full year at Tech Corp", primary: true }, { id: "changed", label: "Something changed" }] },
-  { role: "user", text: "Yes, full year at Tech Corp", confirm: { sectionId: "income", itemId: "employment", tags: ["W-2 · Tech Corp"] }, advance: { activeItem: "self_employment" } },
-
-  { role: "assistant", text: "I see two 1099-NEC forms — freelance work for two clients. Include them?", chips: [{ id: "se", label: "Yes, include both", primary: true }, { id: "skip", label: "Skip self-employment" }] },
-  { role: "user", text: "Yes, include both", confirm: { sectionId: "income", itemId: "self_employment", tags: ["freelance", "2 clients"] }, advance: { activeItem: "stocks" } },
-
-  { role: "assistant", text: "Your Fidelity 1099-DIV and 1099-B are loaded. I'll handle cost basis adjustment in the planning section.", chips: [{ id: "stocks", label: "Yes, proceed", primary: true }, { id: "more", label: "Tell me more" }] },
-  { role: "user", text: "Yes, proceed", confirm: { sectionId: "income", itemId: "stocks", tags: ["Fidelity"] }, advance: { activeItem: "crypto" } },
-
-  { role: "assistant", text: "Found Coinbase activity from last year. Pull this year's transactions the same way?", chips: [{ id: "crypto", label: "Yes, pull from Coinbase", primary: true }, { id: "other", label: "I have other exchanges" }] },
-  { role: "user", text: "Yes, pull from Coinbase", confirm: { sectionId: "income", itemId: "crypto", tags: ["Coinbase"] }, advance: { activeItem: "rental" } },
-
-  { role: "assistant", text: "Rental property in Austin, TX — same as last year?", chips: [{ id: "rental", label: "Yes, same property", primary: true }, { id: "none", label: "No rental income" }] },
-  { role: "user", text: "Yes, same property", confirm: { sectionId: "income", itemId: "rental", tags: ["Austin, TX"] }, advance: { completeSection: "income", activeSection: "documents", activeItem: "1099div", openSection: "documents" }, confirmDocs: ["w2", "1099nec", "coinbase", "rental_docs"], confirmDocsTag: "Auto-imported" },
-
-  { role: "assistant", text: "Income looks good. I need one more document — your year-end brokerage statement from Fidelity. Upload it when you're ready and I'll extract the details.", showUpload: true },
-  { role: "user", text: "\u{1F4C4} Fidelity_YE_2024.pdf uploaded", triggerExtraction: true },
-  { role: "assistant", text: "Reading the statement…", runExtraction: true, duration: 12000 },
-  { role: "assistant", text: "Got it. Here's what I pulled from the statement. Confirm everything looks right and I'll move on.", showExtractionTable: true },
-  { role: "user", text: "Confirm extracted data", confirmDocs: ["1099div", "1099b"], confirmDocsTag: "Extracted", advance: { completeSection: "documents", activeSection: "foreign", activeItem: "hdfc", openSection: "foreign" } },
-
-  { role: "assistant", text: "Your HDFC Bank year-end balance was $8,420. Confirm?", chips: [{ id: "hdfc", label: "Yes, that's right", primary: true }, { id: "diff", label: "Different balance" }] },
-  { role: "user", text: "Yes, that's right", confirm: { sectionId: "foreign", itemId: "hdfc", tags: ["$8,420 year-end"] }, advance: { activeItem: "icici" } },
-
-  { role: "assistant", text: "ICICI Bank year-end balance was $5,860. Confirm?", chips: [{ id: "icici", label: "Yes, that's right", primary: true }, { id: "diff", label: "Different balance" }] },
-  { role: "user", text: "Yes, that's right", confirm: { sectionId: "foreign", itemId: "icici", tags: ["$5,860 year-end"] }, advance: { activeItem: "other_foreign" } },
-
-  { role: "assistant", text: "Aggregate is $14,280 — over $10K threshold, so FBAR and Form 8938 are required. Any other foreign accounts?", chips: [{ id: "none", label: "No, just those two", primary: true }, { id: "add", label: "Yes, add another" }] },
-  { role: "user", text: "No, just those two", confirm: { sectionId: "foreign", itemId: "other_foreign", tags: ["none · FBAR + 8938"] }, advance: { completeSection: "foreign", activeSection: "deductions", activeItem: "standard_vs_itemized", openSection: "deductions" } },
-
-  { role: "assistant", text: "Before we settle your deductions, let me ask broadly — did you spend money on any of these this year? Tap each one that applies.", multiSelect: { options: [
-    { id: "mortgage", label: "Paid mortgage interest on a home you own" },
-    { id: "property_tax", label: "Paid property tax" },
-    { id: "charity_cash", label: "Donated cash to a charity" },
-    { id: "charity_goods", label: "Donated goods or property to a charity (clothes, furniture, stock, etc.)" },
-    { id: "student_loan", label: "Paid interest on student loans" },
-    { id: "medical", label: "Had big out-of-pocket medical or dental bills" },
-    { id: "childcare", label: "Paid for childcare so you (or your spouse) could work" },
-  ] } },
-  { role: "user", text: "Selected: mortgage interest, property tax, charitable donations", isMultiSelectResponse: true },
-
-  { role: "assistant", text: "Running standard ($29,200 MFJ) against your itemized — mortgage interest, SALT capped at $10K, charitable. Itemized comes out higher at $38,420.", chips: [{ id: "itemized", label: "Use itemized", primary: true }, { id: "standard", label: "Use standard" }] },
-  { role: "user", text: "Use itemized", confirm: { sectionId: "deductions", itemId: "standard_vs_itemized", tags: ["itemized · $38,420"] }, advance: { activeItem: "retirement" } },
-
-  { role: "assistant", text: "W-2 shows $23,000 to 401(k) — maxed. Plus Roth IRA contributions. Include both?", chips: [{ id: "both", label: "Yes, include both", primary: true }, { id: "just401k", label: "Just the 401(k)" }] },
-  { role: "user", text: "Yes, include both", confirm: { sectionId: "deductions", itemId: "retirement", tags: ["401(k) maxed", "Roth IRA"] }, advance: { activeItem: "charitable" } },
-
-  { role: "assistant", text: "$4,800 in charitable contributions reported. Match your records?", chips: [{ id: "charity", label: "Yes, that's right", primary: true }, { id: "check", label: "Let me check" }] },
-  { role: "user", text: "Yes, that's right", confirm: { sectionId: "deductions", itemId: "charitable", tags: ["$4,800 contributed"] }, advance: { completeSection: "deductions", activeSection: "planning", activeItem: "rsu_basis", openSection: "planning" } },
-
-  { role: "assistant", text: "Your 1099-B under-reports cost basis on 847 RSU shares by $42,103. Adjusting up using your supplemental statement so you're not double-taxed.", chips: [{ id: "rsu", label: "Apply the adjustment", primary: true }, { id: "more", label: "Tell me more" }] },
-  { role: "user", text: "Apply the adjustment", confirm: { sectionId: "planning", itemId: "rsu_basis", tags: ["basis +$42,103"] }, advance: { activeItem: "iso_amt" } },
-
-  { role: "assistant", text: "You exercised 1,200 ISOs in Q3 at $52 strike with $89 FMV — $44,400 AMT preference. You're $11,840 into AMT territory. Capturing as carryforward credit.", chips: [{ id: "iso", label: "Apply", primary: true }, { id: "more", label: "Tell me more" }] },
-  { role: "user", text: "Apply", confirm: { sectionId: "planning", itemId: "iso_amt", tags: ["$11,840 AMT", "carryforward"] }, advance: { activeItem: "state_tax" } },
-
-  { role: "assistant", text: "Running your California state return alongside the federal. Standard CA conformity rules apply.", chips: [{ id: "state", label: "Proceed", primary: true }] },
-  { role: "user", text: "Proceed", confirm: { sectionId: "planning", itemId: "state_tax", tags: ["CA · standard conformity"] }, advance: { completeSection: "planning", activeSection: "draft" } },
-
-  { role: "assistant", text: "Got everything I need. Preparing your draft return now — you'll see the progress on the right.", duration: 5000, runProgress: true },
-  { role: "assistant", text: "Your return is ready.\n\n**Federal refund: $4,820**\n**California refund: $1,210**\n\nReview the summary or edit anything above before filing.", chips: [{ id: "review", label: "Review and file", primary: true }, { id: "summary", label: "See the summary" }] },
-]
-
-const SUMMARY_SECTIONS = [
-  {
-    label: "Your income breakdown", color: "bg-blue-900", items: [
-      { label: "W-2 wages (Tech Corp)", value: "$185,000" },
-      { label: "Self-employment (freelance)", value: "$42,600" },
-      { label: "Qualified dividends", value: "$6,180" },
-      { label: "Ordinary dividends", value: "$8,240" },
-      { label: "Short-term capital gains", value: "$1,240" },
-      { label: "Rental income (net)", value: "$18,400" },
-      { label: "Crypto gains", value: "$3,820" },
-    ],
-  },
-  {
-    label: "Deductions to reduce your taxable income", color: "bg-orange-900", items: [
-      { label: "Standard deduction (MFJ)", value: "$29,200" },
-      { label: "401(k) contributions", value: "$23,000" },
-      { label: "Student loan interest", value: "$2,500" },
-      { label: "Self-employment tax (½)", value: "$3,012" },
-      { label: "Home office deduction", value: "$1,800" },
-    ],
-  },
-  {
-    label: "Your tax calculation", color: "bg-gray-800", items: [
-      { label: "Taxable income", value: "$206,768" },
-      { label: "Federal tax", value: "$38,420" },
-      { label: "California state tax", value: "$14,860" },
-      { label: "Self-employment tax", value: "$6,024" },
-      { label: "Net investment income tax", value: "$0" },
-    ],
-  },
-  {
-    label: "Amount you owe", color: "bg-amber-900", items: [
-      { label: "Total tax liability", value: "$59,304" },
-      { label: "Federal withholding (W-2)", value: "$42,500" },
-      { label: "CA withholding (W-2)", value: "$11,200" },
-      { label: "Estimated payments made", value: "$10,424" },
-      { label: "Federal refund", value: "$4,820", highlight: true },
-      { label: "California refund", value: "$1,210", highlight: true },
-    ],
-  },
-  {
-    label: "Carryovers to future years", color: "bg-purple-900", items: [
-      { label: "Capital loss carryover", value: "$0" },
-      { label: "Charitable contribution carryover", value: "$0" },
-      { label: "Net operating loss", value: "$0" },
-    ],
-  },
-]
-
-function SummaryBreakdown() {
+function SummaryBreakdown({ ret }: { ret: ReturnResult }) {
   const [openSection, setOpenSection] = useState<number | null>(null)
+  const sections = [
+    { label: "Your income breakdown", color: "bg-blue-900", items: ret.summary.income },
+    { label: "Deductions to reduce your taxable income", color: "bg-orange-900", items: ret.summary.deductions },
+    { label: "Your tax calculation", color: "bg-gray-800", items: ret.summary.taxLines },
+    { label: ret.totalBack >= 0 ? "Your refund" : "Amount you owe", color: "bg-amber-900", items: ret.summary.payments },
+    { label: "Carryovers to future years", color: "bg-purple-900", items: ret.summary.carryovers },
+  ]
   return (
     <div className="max-w-[580px] mx-auto flex flex-col gap-6">
       <div className="flex flex-col items-center gap-1.5 text-center">
-        <span className="text-[14px] leading-[20px] text-white font-[Manrope]">You&apos;re getting back</span>
-        <span className="text-[24px] leading-[28px] font-semibold text-white font-[Manrope]">$6,030</span>
+        <span className="text-[14px] leading-[20px] text-white font-[Manrope]">{ret.totalBack >= 0 ? "You’re getting back" : "You owe"}</span>
+        <span className="text-[24px] leading-[28px] font-semibold text-white font-[Manrope]">{money(ret.totalBack)}</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gray-dark-900 border border-gray-dark-700 rounded-lg px-3 py-2.5">
-          <div className="text-[12px] leading-[16px] text-gray-dark-100 font-[Manrope]">Income</div>
-          <div className="text-[18px] leading-[24px] font-semibold text-white font-[Manrope] mt-1">$265,480</div>
-        </div>
-        <div className="bg-gray-dark-900 border border-gray-dark-700 rounded-lg px-3 py-2.5">
-          <div className="text-[12px] leading-[16px] text-gray-dark-100 font-[Manrope]">Deductions</div>
-          <div className="text-[18px] leading-[24px] font-semibold text-white font-[Manrope] mt-1">$59,512</div>
-        </div>
-        <div className="bg-gray-dark-900 border border-gray-dark-700 rounded-lg px-3 py-2.5">
-          <div className="text-[12px] leading-[16px] text-gray-dark-100 font-[Manrope]">Credits</div>
-          <div className="text-[18px] leading-[24px] font-semibold text-white font-[Manrope] mt-1">$2,000</div>
-        </div>
+        {[
+          { label: "Income", value: ret.totalIncome },
+          { label: "Deductions", value: ret.deduction + ret.adjustments },
+          { label: "Credits", value: ret.credits },
+        ].map(card => (
+          <div key={card.label} className="bg-gray-dark-900 border border-gray-dark-700 rounded-lg px-3 py-2.5">
+            <div className="text-[12px] leading-[16px] text-gray-dark-100 font-[Manrope]">{card.label}</div>
+            <div className="text-[18px] leading-[24px] font-semibold text-white font-[Manrope] mt-1">{money(card.value)}</div>
+          </div>
+        ))}
       </div>
       <div className="flex flex-col">
-        {SUMMARY_SECTIONS.map((sec, i) => (
+        {sections.map((sec, i) => (
           <div key={i}>
             {i > 0 && <div className="h-px bg-gray-dark-700" />}
             <button
@@ -2668,7 +2472,7 @@ function SummaryBreakdown() {
                 {sec.items.map((item, j) => (
                   <div key={j} className="flex items-center justify-between text-[13px] font-[Manrope]">
                     <span className="text-gray-dark-200">{item.label}</span>
-                    <span className={cn("font-mono tabular-nums", item.highlight ? "text-emerald-400 font-medium" : "text-white")}>{item.value}</span>
+                    <span className={cn("font-mono tabular-nums", item.highlight ? "text-emerald-400 font-medium" : "text-white")}>{item.value < 0 ? "−" : ""}{money(item.value)}</span>
                   </div>
                 ))}
               </div>
@@ -2746,10 +2550,10 @@ function FilingCanvasSection({ section, isOpen, isActive, activeItem, onToggle }
                     <circle cx="8" cy="8" r="7" fill="none" stroke="var(--brand-400)" strokeWidth="1" />
                     <path d="M4.5 8.5 L7 11 L11.5 5.5" fill="none" stroke="var(--brand-400)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span className="text-sm font-medium text-white">{item.label}</span>
+                  <span className={cn("text-sm font-medium", item.na ? "text-gray-dark-400" : "text-white")}>{item.label}</span>
                   <div className="flex gap-1.5 flex-1 min-w-0 flex-wrap">
                     {item.tags.map((tag, i) => (
-                      <span key={tag} className="bg-gray-dark-700 text-gray-dark-100 text-xs font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap animate-[filing-tag-in_0.4s_cubic-bezier(0.2,0.8,0.2,1)_backwards]" style={{ animationDelay: `${idx * 60 + 100 + i * 60}ms` }}>{tag}</span>
+                      <span key={tag} className={cn(item.na ? "bg-transparent border border-gray-dark-700 text-gray-dark-400" : "bg-gray-dark-700 text-gray-dark-100", "text-xs font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap animate-[filing-tag-in_0.4s_cubic-bezier(0.2,0.8,0.2,1)_backwards]")} style={{ animationDelay: `${idx * 60 + 100 + i * 60}ms` }}>{tag}</span>
                     ))}
                   </div>
                   <button className="bg-gray-dark-950 border border-gray-dark-700/50 text-gray-dark-25 text-xs px-1.5 py-0.5 rounded-md shrink-0 cursor-pointer hover:border-brand-400 transition-colors">
@@ -2795,9 +2599,17 @@ function FilingTimelineDot({ active, complete }: { active: boolean; complete: bo
   )
 }
 
-function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onToggle, canvasTab, setCanvasTab }: {
+// Address on the draft 1040 follows where you lived at the end of the year
+const HOME_ADDRESS: Record<FilingFacts["residency"], [string, string]> = {
+  CA: ["2140 Fillmore Street, Apt 4", "San Francisco, CA 94115"],
+  TX: ["812 Barton Hills Drive", "Austin, TX 78704"],
+  NY: ["1458 Lake Shore Drive, Apt 10B", "New York, NY 10023"],
+}
+
+function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onToggle, canvasTab, setCanvasTab, facts, ret }: {
   sections: FilingSection[]; isSectionOpen: (id: string) => boolean; activeSection: string | null; activeItem: string | null
   onToggle: (id: string) => void; canvasTab: string; setCanvasTab: (tab: string) => void
+  facts: FilingFacts; ret: ReturnResult
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -2908,7 +2720,7 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
         )}
 
         {isComplete && canvasTab === "summary" && (
-          <SummaryBreakdown />
+          <SummaryBreakdown ret={ret} />
         )}
 
         {isComplete && canvasTab === "draft" && (
@@ -2922,19 +2734,30 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
                 <div className="text-[10px] text-muted-foreground mt-0.5">U.S. Individual Income Tax Return</div>
               </div>
               <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-                <div className="flex justify-between"><span>Filing status</span><span className="text-foreground">Married Filing Jointly</span></div>
+                <div className="flex justify-between"><span>Filing status</span><span className="text-foreground">{STATUS_LABEL[facts.status]}</span></div>
                 <div className="flex justify-between"><span>Your first name and middle initial</span><span className="text-foreground">Bhaskar</span></div>
                 <div className="flex justify-between"><span>Last name</span><span className="text-foreground">Tiwari</span></div>
-                <div className="flex justify-between"><span>Home address</span><span className="text-foreground">1458 Lake Shore Drive, Apt 10B</span></div>
-                <div className="flex justify-between"><span>City, state, and ZIP</span><span className="text-foreground">New York, NY 10023</span></div>
+                <div className="flex justify-between"><span>Home address</span><span className="text-foreground">{HOME_ADDRESS[facts.residency][0]}</span></div>
+                <div className="flex justify-between"><span>City, state, and ZIP</span><span className="text-foreground">{HOME_ADDRESS[facts.residency][1]}</span></div>
               </div>
               <div className="mt-6 pt-4 border-t border-border flex flex-col gap-3 text-sm text-muted-foreground">
-                <div className="flex justify-between"><span>1. Wages, salaries, tips (W-2)</span><span className="text-foreground font-mono">$185,000</span></div>
-                <div className="flex justify-between"><span>2. Tax-exempt interest</span><span className="text-foreground font-mono">$0</span></div>
-                <div className="flex justify-between"><span>3a. Qualified dividends</span><span className="text-foreground font-mono">$6,180</span></div>
-                <div className="flex justify-between"><span>3b. Ordinary dividends</span><span className="text-foreground font-mono">$8,240</span></div>
-                <div className="flex justify-between"><span>7. Capital gain or (loss)</span><span className="text-foreground font-mono">$1,240</span></div>
-                <div className="flex justify-between font-medium"><span className="text-foreground">9. Total income</span><span className="text-foreground font-mono">$194,480</span></div>
+                {[
+                  { line: "1z. Wages, salaries, tips (W-2)", value: ret.wages },
+                  { line: "3a. Qualified dividends", value: ret.qualDiv },
+                  { line: "3b. Ordinary dividends", value: ret.ordDiv },
+                  { line: "7. Capital gain or (loss)", value: ret.stGains + ret.ltGains + ret.crypto },
+                  { line: "8. Other income (Schedule 1)", value: ret.se + ret.rentalNet + ret.pficIncome },
+                  { line: "9. Total income", value: ret.totalIncome, bold: true },
+                  { line: "10. Adjustments to income", value: ret.adjustments },
+                  { line: "11. Adjusted gross income", value: ret.agi, bold: true },
+                  { line: `12. ${ret.deductionChoice === "itemized" ? "Itemized" : "Standard"} deduction`, value: ret.deduction },
+                  { line: "15. Taxable income", value: ret.taxable, bold: true },
+                  { line: "24. Total tax", value: ret.fedTax },
+                  { line: "25–26. Withholding and estimated payments", value: ret.fedWithholding + ret.fedEstimated },
+                  { line: ret.fedRefund >= 0 ? "34. Overpaid (refund)" : "37. Amount you owe", value: Math.abs(ret.fedRefund), bold: true },
+                ].map(row => (
+                  <div key={row.line} className={cn("flex justify-between", row.bold && "font-medium")}><span className={row.bold ? "text-foreground" : undefined}>{row.line}</span><span className="text-foreground font-mono">{money(row.value)}</span></div>
+                ))}
               </div>
             </div>
           </div>
@@ -3152,8 +2975,13 @@ function ProfileConfirmationForm({ onConfirm }: { onConfirm?: () => void }) {
   )
 }
 
+// Runs the branching filing scenario (filing-scenario.ts): each node asks a question,
+// the chosen option records facts, updates the canvas and picks the next node.
 function CurrentReturnFiling() {
-  const [scriptIdx, setScriptIdx] = useState(0)
+  // `n` re-triggers the node effect when an option loops back to the same node
+  const [step, setStep] = useState({ id: FILING_START, n: 0 })
+  const [awaiting, setAwaiting] = useState<string | null>(null)
+  const [facts, setFacts] = useState<FilingFacts>(DEFAULT_FACTS)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [isThinking, setIsThinking] = useState(false)
   const [sections, setSections] = useState<FilingSection[]>(INITIAL_FILING_SECTIONS)
@@ -3163,11 +2991,14 @@ function CurrentReturnFiling() {
   const [manualOpen, setManualOpen] = useState<Set<string>>(new Set())
   const [canvasTab, setCanvasTab] = useState("profile")
   const pendingChipsRef = useRef<ChipAction[] | null>(null)
+  const activeSectionRef = useRef<string | null>(null)
+  const ret = useMemo(() => computeReturn(facts), [facts])
 
+  // Show the summary once, when the draft finishes; later tab choices stick
+  const draftDone = (sections.find(s => s.id === "draft")?.progress ?? 0) >= 100
   useEffect(() => {
-    const draft = sections.find(s => s.id === "draft")
-    if ((draft?.progress ?? 0) >= 100) setCanvasTab("summary")
-  }, [sections])
+    if (draftDone) setCanvasTab("summary")
+  }, [draftDone])
 
   useEffect(() => {
     const itemSections = sections.filter(s => s.type === "items" && s.items)
@@ -3181,103 +3012,109 @@ function CurrentReturnFiling() {
     }
   }, [sections])
 
-  const confirmItem = (sectionId: string, itemId: string, tags: string[]) => {
-    setSections(prev => prev.map(s =>
-      s.id !== sectionId ? s : { ...s, items: s.items?.map(it => it.id === itemId ? { ...it, confirmed: true, tags } : it) }
-    ))
-  }
-
-  const confirmDocsBatch = (docIds: string[], tag = "Auto-imported") => {
-    setSections(prev => prev.map(s =>
-      s.id !== "documents" ? s : { ...s, items: s.items?.map(it => docIds.includes(it.id) ? { ...it, confirmed: true, extracting: false, tags: [tag] } : it) }
-    ))
-  }
-
-  const markDocsExtracting = (docIds: string[]) => {
-    setSections(prev => prev.map(s =>
-      s.id !== "documents" ? s : { ...s, items: s.items?.map(it => docIds.includes(it.id) ? { ...it, extracting: true } : it) }
-    ))
-  }
-
-  const applyAdvance = (advance: FilingScriptStep["advance"]) => {
-    if (!advance) return
-    if (advance.activeSection !== undefined) setActiveSectionId(advance.activeSection)
-    if (advance.activeItem !== undefined) setActiveItem(advance.activeItem)
-    setManualOpen(new Set())
-    if (advance.completeSection) {
-      setSections(prev => prev.map(s => s.id === advance.completeSection ? { ...s, state: "complete" } : s))
-      if (advance.openSection) {
-        setTimeout(() => setActiveSectionId(advance.openSection!), 600)
+  const applyEffect = (effect: FilingEffect | undefined, f: FilingFacts) => {
+    if (!effect) return
+    setSections(prev => prev.map(s => {
+      if (s.type !== "items" || !s.items) return s
+      let items = s.items
+      if (s.id === "documents" && effect.syncDocs) {
+        const existing = new Map(items.map(it => [it.id, it]))
+        items = documentItems(f).map(it => {
+          const prior = existing.get(it.id)
+          return prior ? { ...prior, label: it.label } : it
+        })
       }
+      if (s.id === "documents" && effect.importDocs) {
+        items = items.map(it => it.confirmed || (UPLOAD_DOCS.includes(it.id) && f.brokerage !== "none") ? it : { ...it, confirmed: true, tags: ["Auto-imported"] })
+      }
+      for (const a of effect.add ?? []) {
+        if (a.section !== s.id || items.some(it => it.id === a.id)) continue
+        const added = { id: a.id, label: a.label, tags: [], confirmed: false }
+        const at = a.before ? items.findIndex(it => it.id === a.before) : -1
+        items = at >= 0 ? [...items.slice(0, at), added, ...items.slice(at)] : [...items, added]
+      }
+      for (const r of effect.relabel ?? []) {
+        if (r.section === s.id) items = items.map(it => it.id === r.item ? { ...it, label: r.label } : it)
+      }
+      if (effect.extracting) items = items.map(it => effect.extracting!.includes(it.id) ? { ...it, extracting: true } : it)
+      for (const c of effect.confirm ?? []) {
+        if (c.section === s.id) items = items.map(it => it.id === c.item ? { ...it, confirmed: true, extracting: false, tags: c.tags, na: c.na } : it)
+      }
+      return items === s.items ? s : { ...s, items }
+    }))
+    if (effect.canvasTab) setCanvasTab(effect.canvasTab)
+  }
+
+  const focusOn = (focus: { section: string; item?: string } | undefined) => {
+    if (!focus) return
+    const prev = activeSectionRef.current
+    activeSectionRef.current = focus.section
+    setActiveItem(focus.item ?? null)
+    setManualOpen(new Set())
+    if (prev === focus.section) return
+    if (prev) {
+      // Close the finished section, then open the next one once it has collapsed
+      setSections(p => p.map(s => s.id === prev ? { ...s, state: "complete" } : s))
+      setActiveSectionId(null)
+      setTimeout(() => setActiveSectionId(focus.section), 600)
+    } else {
+      setActiveSectionId(focus.section)
     }
   }
+
+  const go = (id: string) => setStep(s => ({ id, n: s.n + 1 }))
 
   useEffect(() => {
-    if (scriptIdx >= FILING_SCRIPT.length) return
-    const step = FILING_SCRIPT[scriptIdx]
-    if (step.role !== "assistant") return
-
-    if (step.confirmDocs) {
-      confirmDocsBatch(step.confirmDocs, step.confirmDocsTag)
+    const node = FILING_NODES[step.id]
+    if (!node) return
+    if (node.skip?.when(facts)) {
+      const { section, item } = node.focus ?? {}
+      if (section && item) applyEffect({ confirm: [{ section, item, tags: node.skip.tags.length ? node.skip.tags : ["Not applicable"], na: true }] }, facts)
+      go(resolve(node.skip.next, facts))
+      return
     }
-
-    if (step.runProgress) {
-      // Progress is now computed in real-time from confirmed items
-    }
-
-    if (step.runExtraction) {
-      markDocsExtracting(["1099div", "1099b"])
-    }
-
-    if (step.runExtraction && step.duration) {
-      // Show the message + tool call immediately, then advance after duration
-      const msg: ChatMessage = { role: "assistant", body: step.text, typing: true, runExtraction: true }
-      setChatMessages(prev => [...prev, msg])
-      setCurrentChips([])
-      const t = setTimeout(() => {
-        if (step.advance) applyAdvance(step.advance)
-        setScriptIdx(scriptIdx + 1)
-      }, step.duration)
-      return () => clearTimeout(t)
-    } else if (step.duration) {
-      setIsThinking(true)
-      const t = setTimeout(() => {
-        setIsThinking(false)
-        const msg: ChatMessage = { role: "assistant", body: step.text, typing: true, showExtractionTable: step.showExtractionTable, showUpload: step.showUpload, showMultiSelect: !!step.multiSelect, multiSelectOptions: step.multiSelect?.options }
-        setChatMessages(prev => [...prev, msg])
-        setCurrentChips([])
-        if (step.chips) pendingChipsRef.current = step.chips.map(c => ({ id: c.id, label: c.label, primary: c.primary }))
-        if (step.advance) applyAdvance(step.advance)
-        setScriptIdx(scriptIdx + 1)
-      }, step.duration)
-      return () => clearTimeout(t)
-    } else {
-      const t = setTimeout(() => {
-        const msg: ChatMessage = { role: "assistant", body: step.text, typing: true, showUpload: step.showUpload, showExtractionTable: step.showExtractionTable, showMultiSelect: !!step.multiSelect, multiSelectOptions: step.multiSelect?.options }
-        setChatMessages(prev => [...prev, msg])
-        setCurrentChips([])
-        if (step.chips) pendingChipsRef.current = step.chips.map(c => ({ id: c.id, label: c.label, primary: c.primary }))
-        if (step.advance) applyAdvance(step.advance)
-        setScriptIdx(scriptIdx + 1)
-      }, 500)
-      return () => clearTimeout(t)
-    }
+    const ui = resolve(node.ui, facts)
+    const timers: ReturnType<typeof setTimeout>[] = []
+    setIsThinking(step.id !== FILING_START)
+    timers.push(setTimeout(() => {
+      setIsThinking(false)
+      focusOn(node.focus)
+      applyEffect(resolve(node.effect, facts), facts)
+      setChatMessages(prev => [...prev, {
+        role: "assistant",
+        body: resolve(node.text, facts),
+        typing: true,
+        showUpload: ui === "upload",
+        runExtraction: ui === "extracting",
+        showExtractionTable: ui === "extractionTable",
+        showMultiSelect: ui === "multiSelect",
+        multiSelectOptions: node.multiSelect?.map(({ id, label }) => ({ id, label })),
+      }])
+      const options = resolve(node.options ?? [], facts)
+      pendingChipsRef.current = options.length ? options.map(o => ({ id: o.id, label: o.label })) : null
+      setAwaiting(step.id)
+      if (node.auto) timers.push(setTimeout(() => go(resolve(node.auto!.next, facts)), node.auto.after))
+    }, step.id === FILING_START ? 500 : ui === "extracting" ? 400 : 900))
+    return () => timers.forEach(clearTimeout)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scriptIdx])
+  }, [step])
 
-  const onChip = (chip: ChipAction) => {
-    const nextStep = FILING_SCRIPT[scriptIdx]
-    if (!nextStep || nextStep.role !== "user") return
-
+  const respond = (action: FilingAction, message: ChatMessage) => {
+    setAwaiting(null)
     pendingChipsRef.current = null
-    setChatMessages(prev => [...prev, { role: "user", body: nextStep.text }])
     setCurrentChips([])
     setManualOpen(new Set())
+    setChatMessages(prev => [...prev, message])
+    const next = action.set ? { ...facts, ...action.set } : facts
+    setFacts(next)
+    applyEffect(resolve(action.effect, next), next)
+    go(resolve(action.next, next))
+  }
 
-    if (nextStep.confirm) confirmItem(nextStep.confirm.sectionId, nextStep.confirm.itemId, nextStep.confirm.tags)
-    if (nextStep.confirmDocs) confirmDocsBatch(nextStep.confirmDocs, nextStep.confirmDocsTag)
-    if (nextStep.advance) applyAdvance(nextStep.advance)
-    setScriptIdx(scriptIdx + 1)
+  const onChip = (chip: ChipAction) => {
+    const node = awaiting ? FILING_NODES[awaiting] : null
+    const option = node && resolve(node.options ?? [], facts).find(o => o.id === chip.id)
+    if (option) respond(option, { role: "user", body: option.reply ?? option.label })
   }
 
   const handleTypingComplete = useCallback(() => {
@@ -3288,41 +3125,18 @@ function CurrentReturnFiling() {
   }, [])
 
   const handleUpload = () => {
-    const nextStep = FILING_SCRIPT[scriptIdx]
-    if (!nextStep || nextStep.role !== "user") return
-    setChatMessages(prev => prev.map((m, i) => i === prev.length - 1 ? { ...m, showUpload: false } : m))
-    setChatMessages(prev => [...prev, { role: "user", body: "Here's the year-end statement", attachment: "Fidelity_YE_2024.pdf" }])
-    setCurrentChips([])
-    setManualOpen(new Set())
-    if (nextStep.triggerExtraction) {
-      markDocsExtracting(["1099div", "1099b"])
-    }
-    if (nextStep.advance) applyAdvance(nextStep.advance)
-    setScriptIdx(scriptIdx + 1)
+    const action = awaiting ? FILING_NODES[awaiting].onUpload : undefined
+    if (action) respond(action, { role: "user", body: action.reply ?? "Uploaded", attachment: "Fidelity_YE_2024.pdf" })
   }
 
   const handleConfirmExtraction = () => {
-    const nextStep = FILING_SCRIPT[scriptIdx]
-    if (!nextStep || nextStep.role !== "user") return
-    setChatMessages(prev => [...prev, { role: "user", body: nextStep.text }])
-    setCurrentChips([])
-    setManualOpen(new Set())
-    if (nextStep.confirm) confirmItem(nextStep.confirm.sectionId, nextStep.confirm.itemId, nextStep.confirm.tags)
-    if (nextStep.confirmDocs) confirmDocsBatch(nextStep.confirmDocs, nextStep.confirmDocsTag)
-    if (nextStep.advance) applyAdvance(nextStep.advance)
-    setScriptIdx(scriptIdx + 1)
+    const action = awaiting ? FILING_NODES[awaiting].onConfirmTable : undefined
+    if (action) respond(action, { role: "user", body: action.reply ?? "Confirmed" })
   }
 
   const handleMultiSelect = (selected: string[]) => {
-    const nextStep = FILING_SCRIPT[scriptIdx]
-    if (!nextStep || nextStep.role !== "user" || !nextStep.isMultiSelectResponse) return
-    const responseText = selected.length > 0 ? `Selected: ${selected.join(", ")}` : "None of these apply"
-    setChatMessages(prev => [...prev, { role: "user", body: responseText }])
-    setCurrentChips([])
-    setManualOpen(new Set())
-    if (nextStep.confirm) confirmItem(nextStep.confirm.sectionId, nextStep.confirm.itemId, nextStep.confirm.tags)
-    if (nextStep.advance) applyAdvance(nextStep.advance)
-    setScriptIdx(scriptIdx + 1)
+    const action = awaiting ? FILING_NODES[awaiting].onMultiSelect?.(selected) : undefined
+    if (action) respond(action, { role: "user", body: action.reply ?? "Done" })
   }
 
   const handleToggle = (id: string) => {
@@ -3361,6 +3175,8 @@ function CurrentReturnFiling() {
         onToggle={handleToggle}
         canvasTab={canvasTab}
         setCanvasTab={setCanvasTab}
+        facts={facts}
+        ret={ret}
       />
     </div>
   )
