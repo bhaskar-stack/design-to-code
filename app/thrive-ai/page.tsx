@@ -1923,12 +1923,16 @@ function PlanningTab({ states, setStates, setTab }: {
       <SideNavBarTabsList variant="default" className="w-[220px] [&_svg]:hidden">
         <SideNavBarTabsTrigger value="plan">2026 Tax Plan</SideNavBarTabsTrigger>
         <SideNavBarTabsTrigger value="w4">W-4 Estimator</SideNavBarTabsTrigger>
+        <SideNavBarTabsTrigger value="advance">Advance payments</SideNavBarTabsTrigger>
       </SideNavBarTabsList>
       <SideNavBarTabsContent value="plan" className="flex min-h-0 overflow-hidden rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900">
         <TaxPlanView states={states} setStates={setStates} />
       </SideNavBarTabsContent>
       <SideNavBarTabsContent value="w4" className="flex min-h-0 overflow-hidden rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900">
         <W4EstimatorView />
+      </SideNavBarTabsContent>
+      <SideNavBarTabsContent value="advance" className="flex min-h-0 overflow-hidden rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900">
+        <AdvanceTaxPayments />
       </SideNavBarTabsContent>
     </SideNavBarTabs>
   )
@@ -2991,7 +2995,7 @@ function FilingCanvas({ sections, isSectionOpen, activeSection, activeItem, onTo
 
 // ── FILING tab ──────────────────────────────────────────────────────────────
 function FilingTab({ setTab }: { setTab: (t: string) => void }) {
-  const [section, setSection] = useState("advance-tax-2026")
+  const [section, setSection] = useState("filing-2026")
 
   const contentClass = "flex h-full min-h-0 overflow-hidden rounded-tl-xl border-t border-l border-gray-dark-700 bg-gray-dark-900"
 
@@ -3006,21 +3010,10 @@ function FilingTab({ setTab }: { setTab: (t: string) => void }) {
   return (
     <div className="flex h-full overflow-hidden gap-0">
       <div className="w-[220px] shrink-0 flex flex-col gap-0 pt-2 overflow-y-auto">
-        {/* 2026 year label */}
-        <span className="mx-3 mt-3 mb-0.5 px-2 py-1.5 text-sm text-gray-dark-400">2026</span>
-        {/* Sub-items with connecting vertical line */}
-        <div className="relative ml-[22px] flex flex-col">
-          <div className="absolute left-0 top-2 bottom-2 w-px bg-gray-dark-700" />
-          <button onClick={() => setSection("advance-tax-2026")} className={triggerClass(section === "advance-tax-2026")}>
-            <span className="min-w-0 flex-1 truncate text-left">Advance payments</span>
-          </button>
-          <button onClick={() => setSection("filing-2026")} className={triggerClass(section === "filing-2026")}>
-            <span className="min-w-0 flex-1 truncate text-left">Return filing</span>
-          </button>
-        </div>
-
-        {/* 2025 & 2024 as flat tabs */}
-        <button onClick={() => setSection("summary-2025")} className={cn(triggerClass(section === "summary-2025"), "mt-1")}>
+        <button onClick={() => setSection("filing-2026")} className={triggerClass(section === "filing-2026")}>
+          <span className="min-w-0 flex-1 truncate text-left">2026</span>
+        </button>
+        <button onClick={() => setSection("summary-2025")} className={triggerClass(section === "summary-2025")}>
           <span className="min-w-0 flex-1 truncate text-left">2025</span>
         </button>
         <button onClick={() => setSection("summary-2024")} className={triggerClass(section === "summary-2024")}>
@@ -3028,7 +3021,6 @@ function FilingTab({ setTab }: { setTab: (t: string) => void }) {
         </button>
       </div>
       <div className="flex-1 min-w-0 h-full">
-        <div className={cn(contentClass, section !== "advance-tax-2026" && "hidden")}><AdvanceTaxPayments /></div>
         <div className={cn(contentClass, section !== "filing-2026" && "hidden")}><CurrentReturnFiling /></div>
         <div className={cn(contentClass, section !== "summary-2025" && "hidden")}><ReturnSummary year="2025" /></div>
         <div className={cn(contentClass, section !== "summary-2024" && "hidden")}><ReturnSummary year="2024" /></div>
