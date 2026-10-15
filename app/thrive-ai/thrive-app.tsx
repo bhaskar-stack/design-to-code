@@ -352,10 +352,10 @@ function HeaderProfileMenu({ setTab }: { setTab: (t: string) => void }) {
     const container = containerRef.current
     const el = highlightRef.current
     if (!container || !el) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const parentRect = container.getBoundingClientRect()
-    const top = rect.top - parentRect.top - 6
-    const height = rect.height + 12
+    // 8px around the item on every side, matching the highlight's 4px inset from the menu edge.
+    // offsetTop is measured inside the menu's border, the same box the highlight is positioned in.
+    const top = e.currentTarget.offsetTop - 8
+    const height = e.currentTarget.offsetHeight + 16
     if (!hasHighlightRef.current) {
       hasHighlightRef.current = true
       el.style.transition = "none"
@@ -539,10 +539,10 @@ function SidebarUserCard({ setTab, className }: { setTab: (t: string) => void; c
     const container = containerRef.current
     const el = highlightRef.current
     if (!container || !el) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const parentRect = container.getBoundingClientRect()
-    const top = rect.top - parentRect.top - 6
-    const height = rect.height + 12
+    // 8px around the item on every side, matching the highlight's 4px inset from the menu edge.
+    // offsetTop is measured inside the menu's border, the same box the highlight is positioned in.
+    const top = e.currentTarget.offsetTop - 8
+    const height = e.currentTarget.offsetHeight + 16
     if (!hasHighlightRef.current) {
       hasHighlightRef.current = true
       el.style.transition = "none"
